@@ -40,32 +40,36 @@ start_time <- Sys.time()
 ### 1. Simulate Covariates -----------------------------------------------------
 
 # Hængepartier / Spørgsmål til del 1:
-#   * Hvordan skal variansen defienres for vores covariates?
+#   * Hvordan skal variansen defienres for vores covariates, lige nu med log og runif()?
 #   * Skal alle covaraites være trukket fra normalfordelingen?
 #   * Hvorfor tjekker vi om corr-matrix er positiv definint?
-#   * Spørg til mødet om min ide med at generere x'er er god; det med at give dem en korrelation 
+#   * Spørg til mødet om min ide med at generere x'er er god; det med at give dem en korrelation + alle er normalfordelte
 
+# Simulation Setup 
 draws = 50
 variables = 40
 iterations = 200
 
-sim_data <- function(draws, variables, iterations) { # Draws, variables, iterations,
+sim_data <- function(d = draws, var = variables, ite = iterations) { # Draws, variables, iterations,
+  
+  # sim_data() returns the simulated observations (draws) of the covariates (Xs) which, in turn, will be used in the DGP.
+  # The covariates are all drawn from the normal distribution. 
   
   # Set seed
   set.seed(007)
   
   # Initialize data holder 
-  data <- as_tibble(data.frame(matrix(nrow = 0, ncol = variables))) %>% 
+  data <- as_tibble(data.frame(matrix(nrow = 0, ncol = var))) %>% 
     add_column(Iteration = NA, .before = "X1") # Column for each variable + an index
   
-  for (i in 1:iterations) { # Loop f.o.m. 1 t.o.m. # of iterations
+  for (i in 1:ite) { 
     
     # Initialize temp data holder
-    data_temp = matrix(nrow = draws, ncol = variables) # Column for each variable 
+    data_temp = matrix(nrow = d, ncol = var) # Column for each variable 
     
-   for (j in 1:variables) {
+   for (j in 1:var) {
      
-     x = rnorm(draws, 0, runif(1, min = 0, max = 1) ** log(i)) 
+     x = rnorm(d, 0, runif(1, min = 0, max = 1) ** log(i)) 
      data_temp[, j] = x
      
    }
@@ -76,7 +80,7 @@ sim_data <- function(draws, variables, iterations) { # Draws, variables, iterati
     data_temp <- data_temp %*% chol
     
     ### Diagnostics ### 
-    if(all(round(var(data_temp)) != diag(variables))){
+    if(all(round(var(data_temp)) != diag(var))){
       log <- c(log, "-- Not all simulated variables are independent")
     }
 
@@ -107,26 +111,85 @@ sim_data <- function(draws, variables, iterations) { # Draws, variables, iterati
 }
 
 # Generate Covariates
-covariates <- sim_data(50, 40, 200)
+covariates <- sim_data()
 
 # Table 1 - Snip of covariates 
 
 # Figure 1 - Distribution of Covariates
-norm_dist <- to_df(for (x in 1:variables))
+norm_dist <- to_vec(for (i in 1:variables) runif(1, min = 0, max = 1) ** log(i))
+norm_dist_df <- as.tibble(norm_dist) %>%
+  `colnames<-`("sd") %>% 
+  add_column(mean = 0, .before = "sd")
 
-ggplot
+map2(.x = t(norm_dist_df)[1,1], .y = t(norm_dist_df)[, 2], 
+     .f = ~{ggplot() + } )
 
 
 
 ### 2. Create Coefficient Cluster ----------------------------------------------
 
-# Ide: Hans coefficient clsuter giver ikke mening, men jeg vil gerne have hans resultater. 
+coef_cluster <- function(betas = variables, center = c(1,3,5), radius = 5) { # radius and # of betas
+  
+  # Definerer 3 clusters m. center + radius, 2rc - 1 non-zero beta i hver cluster
+  
 
- 
+  
+  # radius skal bare sige noget om hvor mange non-zero betaer vi har, ikke hvor store vores beta-værdier er. 
+  # Lav 3 vektror med non-zero beta entries svarende til radius rc*2 - 1. giv hvr entri random nr 1 - 40 sæt ind i samlet vktor med alle 3
+  # clusters og resten er 0. På den måde kan jeg give alle entries i hver cluster den samme behandling.
+  
+  # Initialize vector of betas
+  beta = matrix(rep(0, times = betas)) #beta = t(matrix(nrow = 1, ncol = betas, dimnames = list("beta_value")))
+  
+  # Clusters
+  cluster_temp <- map_df(.x = rep(0, times = 2 * radius -1),
+                         function(.x) { 
+                           
+                           return(data.frame(cluster1 = .x + center[1] + runif(1, -1, 1),
+                                           cluster2 = .x + center[2] + runif(1, -1, 1),
+                                           cluster3 = .x + center[3] + runif(1, -1, 1))) 
+                         })
+  
+  # cluster_temp <- map_df(.x = rep(0, times = 2 * radius -1),
+  #                     ~(data.frame(cluster1 = .x + center[1] + runif(1, -1, 1),
+  #                                            cluster2 = .x + center[2] + runif(1, -1, 1),
+  #                                            cluster3 = .x + centeR[3] + runif(1, -1, 1))))
+  
+  cluster <- append(cluster_temp[, 1], cluster_temp[, 2]) %>% 
+    append(cluster_temp[,3])
+  
+  index <- sample(seq(betas), size = 3 * (2 * radius - 1), replace = FALSE)
+  
+  for (i in enumerate(index)) {
+    
+    index_ite = i[[1]]
+    value = i[[2]]
+    
+    beta[value] = cluster[index_ite]
+
+  }
+  
+
+  return(beta)
+  
+}
+
+# Generatee coefficients
+tester = coef_cluster()
+
+# Figure 2 - 2D plot of the coefficient cluster
+
+
+### 3. Data Generating Process ----------------------------------------------
+
+# Her skal vi have 5 y'er; en for hver radius. 
+
 # 1. Vi simulerer covariates
 # 2. Vi laver coefficient cluster - draw med replacement sætter prob op så der er 2 * rc - 1 i hvert cluster, og hvis de trækker du ik nul --> giv den en værdi omkring center + et stochastic shock
 # 3. Vi simulerer vores DGP
 # 4. Vi har nu data --> vi laver Ridge, lasso, stepwise forward + CV og genererer MSE
+
+# Hvis jeg ikke når at kode hele simulationssetupet inden mødet, så skal jeg have skrrevet ned præcis hvordan jeg vil gøre, så jeg kan spørge! 
 
 
 ### 2. Run Diagnostics -----------------------------------------------------
