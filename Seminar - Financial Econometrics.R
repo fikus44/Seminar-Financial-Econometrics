@@ -128,18 +128,17 @@ map2(.x = t(norm_dist_df)[1,1], .y = t(norm_dist_df)[, 2],
 
 ### 2. Create Coefficient Cluster ----------------------------------------------
 
-coef_cluster <- function(betas = variables, center = c(1,3,5), radius = 5) { # radius and # of betas
+coef_cluster <- function(betas = variables, center = c(1,3,5), radius = 5) {
   
-  # Definerer 3 clusters m. center + radius, 2rc - 1 non-zero beta i hver cluster
-  
-
-  
-  # radius skal bare sige noget om hvor mange non-zero betaer vi har, ikke hvor store vores beta-værdier er. 
-  # Lav 3 vektror med non-zero beta entries svarende til radius rc*2 - 1. giv hvr entri random nr 1 - 40 sæt ind i samlet vktor med alle 3
-  # clusters og resten er 0. På den måde kan jeg give alle entries i hver cluster den samme behandling.
+  # coef_cluster returns a vector of betas of which 3 * 2 * radius - 1 are non-zero and split evenly in 3 separate cofficient clusters with varying 
+  # center but identical radius. Reducing the radius yields a greater # of non-zero coefficients, though the function adheres to the rule. 
+  # Analogous to sim_data(), coef_cluster also carries out some diagnostics. 
   
   # Initialize vector of betas
   beta = matrix(rep(0, times = betas)) #beta = t(matrix(nrow = 1, ncol = betas, dimnames = list("beta_value")))
+  
+  # Create index of non-zero betas
+  index <- sample(seq(betas), size = 3 * (2 * radius - 1), replace = FALSE)
   
   # Clusters
   cluster_temp <- map_df(.x = rep(0, times = 2 * radius -1),
@@ -148,27 +147,35 @@ coef_cluster <- function(betas = variables, center = c(1,3,5), radius = 5) { # r
                            return(data.frame(cluster1 = .x + center[1] + runif(1, -1, 1),
                                            cluster2 = .x + center[2] + runif(1, -1, 1),
                                            cluster3 = .x + center[3] + runif(1, -1, 1))) 
-                         })
+                         }) %>% 
+    unlist()
   
   # cluster_temp <- map_df(.x = rep(0, times = 2 * radius -1),
   #                     ~(data.frame(cluster1 = .x + center[1] + runif(1, -1, 1),
   #                                            cluster2 = .x + center[2] + runif(1, -1, 1),
   #                                            cluster3 = .x + centeR[3] + runif(1, -1, 1))))
   
-  cluster <- append(cluster_temp[, 1], cluster_temp[, 2]) %>% 
-    append(cluster_temp[,3])
-  
-  index <- sample(seq(betas), size = 3 * (2 * radius - 1), replace = FALSE)
+  # cluster <- append(cluster_temp[, 1], cluster_temp[, 2]) %>%
+  #   append(cluster_temp[,3])
   
   for (i in enumerate(index)) {
-    
+
     index_ite = i[[1]]
     value = i[[2]]
-    
+
     beta[value] = cluster[index_ite]
 
   }
   
+  ### Diagnostics ### 
+  if(length(unique(beta)) != 3 * (2 * radius - 1) + 1){ # length(beta[, 1] == 0) != betas - 3 * (2 * radius -1) 
+    log <- c(log, "-- Incorrect # of non-zero coefficients")
+  }
+  
+  ### Diagnostics ### 
+  if(FALSE){
+    log <- c(log, "-- Incoerrect # of non-zero coefficients in each cluster")
+  }
 
   return(beta)
   
