@@ -121,8 +121,23 @@ norm_dist_df <- as.tibble(norm_dist) %>%
   `colnames<-`("sd") %>% 
   add_column(mean = 0, .before = "sd")
 
-map2(.x = t(norm_dist_df)[1,1], .y = t(norm_dist_df)[, 2], 
-     .f = ~{ggplot() + } )
+# map2(.x = t(norm_dist_df)[1, ], .y = t(norm_dist_df)[2, ],
+#      .f = ~{
+#        
+#        ggplot(data = data.frame(x = c(-3, 3)), aes(x)) +
+#          stat_function(fun = dnorm, n = 101, args = list(mean = .x, sd = .y)) + ylab("") +
+#          scale_y_continuous(breaks = NULL) + 
+#          theme_article()
+#        
+#      })
+
+ggplot(data = data.frame(x = c(-3, 3)), aes(x)) +            
+  map2(.x = t(norm_dist_df)[1, ], .y = t(norm_dist_df)[2, ],
+       .f = ~stat_function(fun = dnorm, n = 101, args = list(mean = .x, sd = .y))) +
+  scale_y_continuous(breaks = NULL) + 
+  theme_article()
+
+# Jeg skal have ændret varians i covariates, så den stiger lidt hver gang 
 
 
 
@@ -155,15 +170,10 @@ coef_cluster <- function(betas = variables, center = c(1,3,5), radius = 5) {
   #                                            cluster2 = .x + center[2] + runif(1, -1, 1),
   #                                            cluster3 = .x + centeR[3] + runif(1, -1, 1))))
   
-  # cluster <- append(cluster_temp[, 1], cluster_temp[, 2]) %>%
-  #   append(cluster_temp[,3])
-  
   for (i in enumerate(index)) {
 
-    index_ite = i[[1]]
-    value = i[[2]]
-
-    beta[value] = cluster[index_ite]
+    index_ite = i[[1]]; value = i[[2]]
+    beta[value] = cluster_temp[index_ite]
 
   }
   
@@ -181,11 +191,29 @@ coef_cluster <- function(betas = variables, center = c(1,3,5), radius = 5) {
   
 }
 
-# Generatee coefficients
+# Generate coefficients
 tester = coef_cluster()
+tester2 = coef_cluster(radius = 3)
 
 # Figure 2 - 2D plot of the coefficient cluster
+figure_1 <- ggplot() + 
+  geom_rect(aes(xmin = 0, xmax = 5, ymin = 0, ymax = 8), 
+            fill = "blue", alpha = 0.0, color = "white") +
+  geom_rect(aes(xmin = 0, xmax = 2, ymin = 2, ymax = 4),
+            fill = "blue", alpha = 0.5, color = "black", size = 0.4) + 
+  labs(x = "Coefficient Cluster 1", y = "Coefficient Cluster 2") +
+  theme_article()
 
+figure_2 <- ggplot() +
+  geom_rect(aes(xmin = 0, xmax = 5, ymin = 0, ymax = 8), 
+            fill = "blue", alpha = 0.0, color = "white")  +
+  geom_rect(aes(xmin = 0, xmax = 2, ymin = 4, ymax = 6),
+            fill = "orange", alpha = 0.8, color = "black", size = 0.4) +
+  labs(x = "Coefficient Cluster 1", y = "Coefficient Cluster 3") +
+  theme_article()
+
+figure2 <- gridExtra::grid.arrange(figure_1, figure_2, ncol = 2)
+ggsave("figure2.pdf", plot=figure2, width = 25, height = 10, units= "cm", dpi = 300)
 
 ### 3. Data Generating Process ----------------------------------------------
 
