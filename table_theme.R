@@ -3,7 +3,7 @@ library("knitr")
 library("kableExtra")
 
 
-table_theme = function(data, colnames, caption) {
+table_theme = function(data, colnames, caption, escape = TRUE) {
   
   data %>%
     kable(format = "latex", #Output er kompatibelt med LaTeX
@@ -12,7 +12,7 @@ table_theme = function(data, colnames, caption) {
           align = c("l", rep("c", length(colnames) - 2), "r"), #Søjle alignement, første søjle er venstre aligned, herefter er alle søjle på nær den sidste søjle center aligned. Den sidste søjle er højre aligned
           caption = caption, #Tabel titel. Husk at caption skal angives som string i funktion. 
           format.args = list(big.mark = ",", scientific = FALSE), #Tilføjer  1.000 tals separator. Scientific = FALSE betyder vi IKKE benytter os af e til at denote tal
-          escape = TRUE, #Output tager højde for special characters i LaTeX som f.eks. bliver _ til \_
+          escape = escape, #Output tager højde for special characters i LaTeX som f.eks. bliver _ til \_
           booktabs = TRUE, #Benytter os af booktabs package i LaTeX
           linesep =  '' #Intet ekstra line space hver x. linje. Kan ændres ved c("", "", "","","\\addlinespace")
             

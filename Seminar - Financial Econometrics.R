@@ -50,7 +50,7 @@ draws = 50
 variables = 40
 iterations = 200
 
-sim_data <- function(d = draws, var = variables, ite = iterations) { # Draws, variables, iterations,
+simCovariates <- function(d = draws, var = variables, ite = iterations) { # Draws, variables, iterations,
   
   # sim_data() returns the simulated observations (draws) of the covariates (Xs) which, in turn, will be used in the DGP.
   # The covariates are all drawn from the normal distribution. 
@@ -69,7 +69,7 @@ sim_data <- function(d = draws, var = variables, ite = iterations) { # Draws, va
     
    for (j in 1:var) {
      
-     x = rnorm(d, 0, runif(1, min = 0, max = 1) ** log(i)) 
+     x = rnorm(d, 0, runif(1, min = 1, max = 1.3) ** log(j)) 
      data_temp[, j] = x
      
    }
@@ -111,16 +111,29 @@ sim_data <- function(d = draws, var = variables, ite = iterations) { # Draws, va
 }
 
 # Generate Covariates
-covariates <- sim_data()
+covariates <- simCovariates()
 
 # Table 1 - Snip of covariates 
+table1_names <- c("Iteration", "X_1", "X_2", "X_3", "X_4", "Dots", "X_{37}", "X_{38}", "X_{39}", "X_{40}")
+table1 <- table_theme(rbind(head(covariates, 4), tail(covariates, 3)) %>% select(Iteration, X1:X5, X37:X40), colnames = table1_names, 
+                      caption = "Sample of simulated data from simCovariates()", escape = FALSE) %>% 
+  kable_styling(latex_options = "scale_down")
 
 # Figure 1 - Distribution of Covariates
-norm_dist <- to_vec(for (i in 1:variables) runif(1, min = 0, max = 1) ** log(i))
-norm_dist_df <- as.tibble(norm_dist) %>%
+norm_dist_df <- as.tibble(to_vec(for (i in 1:variables) runif(1, min = 1, max = 1.3) ** log(i))) %>% 
   `colnames<-`("sd") %>% 
   add_column(mean = 0, .before = "sd")
 
+figure_1 <- ggplot(data = data.frame(x = c(-7, 7)), aes(x)) +            
+  map2(.x = t(norm_dist_df)[1, ], .y = t(norm_dist_df)[2, ],
+       .f = ~stat_function(fun = dnorm, n = 101, args = list(mean = .x, sd = .y))) +
+  labs(y = "f(x)") + 
+  theme_article()
+  #scale_y_continuous(breaks = NULL)
+
+ggsave("figure1.pdf", plot=test_fig, width = 20, height = 18, units= "cm", dpi = 300)
+
+# iterable object where each entry is a ggplot of the gaussian density with varying variance
 # map2(.x = t(norm_dist_df)[1, ], .y = t(norm_dist_df)[2, ],
 #      .f = ~{
 #        
@@ -130,15 +143,6 @@ norm_dist_df <- as.tibble(norm_dist) %>%
 #          theme_article()
 #        
 #      })
-
-ggplot(data = data.frame(x = c(-3, 3)), aes(x)) +            
-  map2(.x = t(norm_dist_df)[1, ], .y = t(norm_dist_df)[2, ],
-       .f = ~stat_function(fun = dnorm, n = 101, args = list(mean = .x, sd = .y))) +
-  scale_y_continuous(breaks = NULL) + 
-  theme_article()
-
-# Jeg skal have ændret varians i covariates, så den stiger lidt hver gang 
-
 
 
 ### 2. Create Coefficient Cluster ----------------------------------------------
@@ -196,7 +200,7 @@ tester = coef_cluster()
 tester2 = coef_cluster(radius = 3)
 
 # Figure 2 - 2D plot of the coefficient cluster
-figure_1 <- ggplot() + 
+figure_2A <- ggplot() + 
   geom_rect(aes(xmin = 0, xmax = 5, ymin = 0, ymax = 8), 
             fill = "blue", alpha = 0.0, color = "white") +
   geom_rect(aes(xmin = 0, xmax = 2, ymin = 2, ymax = 4),
@@ -204,7 +208,7 @@ figure_1 <- ggplot() +
   labs(x = "Coefficient Cluster 1", y = "Coefficient Cluster 2") +
   theme_article()
 
-figure_2 <- ggplot() +
+figure_2B <- ggplot() +
   geom_rect(aes(xmin = 0, xmax = 5, ymin = 0, ymax = 8), 
             fill = "blue", alpha = 0.0, color = "white")  +
   geom_rect(aes(xmin = 0, xmax = 2, ymin = 4, ymax = 6),
@@ -212,10 +216,10 @@ figure_2 <- ggplot() +
   labs(x = "Coefficient Cluster 1", y = "Coefficient Cluster 3") +
   theme_article()
 
-figure2 <- gridExtra::grid.arrange(figure_1, figure_2, ncol = 2)
+figure2 <- gridExtra::grid.arrange(figure_2A, figure_2B, ncol = 2)
 ggsave("figure2.pdf", plot=figure2, width = 25, height = 10, units= "cm", dpi = 300)
 
-### 3. Data Generating Process ----------------------------------------------
+### 3. Data Generating Process -------------------------------------------------
 
 # Her skal vi have 5 y'er; en for hver radius. 
 
