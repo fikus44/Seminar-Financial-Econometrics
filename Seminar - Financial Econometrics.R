@@ -131,7 +131,7 @@ figure_1 <- ggplot(data = data.frame(x = c(-7, 7)), aes(x)) +
   theme_article()
   #scale_y_continuous(breaks = NULL)
 
-ggsave("figure1.pdf", plot=test_fig, width = 20, height = 18, units= "cm", dpi = 300)
+ggsave("figure1.pdf", plot=figure_1, width = 20, height = 18, units= "cm", dpi = 300)
 
 # iterable object where each entry is a ggplot of the gaussian density with varying variance
 # map2(.x = t(norm_dist_df)[1, ], .y = t(norm_dist_df)[2, ],
@@ -147,7 +147,7 @@ ggsave("figure1.pdf", plot=test_fig, width = 20, height = 18, units= "cm", dpi =
 
 ### 2. Create Coefficient Cluster ----------------------------------------------
 
-coef_cluster <- function(betas = variables, center = c(1,3,5), radius = 5) {
+coefCluster <- function(betas = variables, center = c(1,3,5), radius = 5) {
   
   # coef_cluster returns a vector of betas of which 3 * 2 * radius - 1 are non-zero and split evenly in 3 separate cofficient clusters with varying 
   # center but identical radius. Reducing the radius yields a greater # of non-zero coefficients, though the function adheres to the rule. 
@@ -195,9 +195,13 @@ coef_cluster <- function(betas = variables, center = c(1,3,5), radius = 5) {
   
 }
 
-# Generate coefficients
-tester = coef_cluster()
-tester2 = coef_cluster(radius = 3)
+# Betas - 5 set of betas one for each radius
+beta1 <- coefCluster(radius = 1)
+beta2 <- coefCluster(radius = 2)
+beta3 <- coefCluster(radius = 3)
+beta4 <- coefCluster(radius = 4)
+beta5 <- coefCluster(radius = 5)
+beta <- as.tibble(cbind(beta1, beta2, beta3, beta4, beta5)) # as.tibble and not matrix to make it compatible with e.g. map_df()
 
 # Figure 2 - 2D plot of the coefficient cluster
 figure_2A <- ggplot() + 
@@ -219,9 +223,51 @@ figure_2B <- ggplot() +
 figure2 <- gridExtra::grid.arrange(figure_2A, figure_2B, ncol = 2)
 ggsave("figure2.pdf", plot=figure2, width = 25, height = 10, units= "cm", dpi = 300)
 
+# Table 2 - non-zero beta coefficients in each coefficient cluster through the radius 
+table2_names <- c("Cluster Radius", "# non-zero coefficients", " # zero coefficients", "# of coefficients")
+table2 <- table_theme(map_df(.x = beta, 
+                             function(.x) {
+                               
+                               return(data.frame(
+                                                 coeff = length(unique(.x)) - 1,
+                                                 coeff_zero = 40 - length(unique(.x)) + 1,
+                                                 coeff_total = 40)) 
+                               
+                             }) %>% add_column(seq(5), .before = "coeff"), 
+                      colnames = table2_names, caption = "Coeffcients in each cluster") %>% 
+  kable_styling(latex_options = "scale_down")
+
+
 ### 3. Data Generating Process -------------------------------------------------
 
-# Her skal vi have 5 y'er; en for hver radius. 
+# Hængepartier / Spørgsmål til del 3:
+#   * jeg bør måske sætte seed her, så error term bliver ens? 
+#   * Jeg kan formentlig også skrive det op på en lidt mere elegant måde? 
+
+# DGP 
+DGP1 <- as.matrix(covariates[, -1]) %*% beta1 + rnorm(1, mean = 0, sd = 1)
+DGP2 <- as.matrix(covariates[, -1]) %*% beta2 + rnorm(1, mean = 0, sd = 1)
+DGP3 <- as.matrix(covariates[, -1]) %*% beta3 + rnorm(1, mean = 0, sd = 1)
+DGP4 <- as.matrix(covariates[, -1]) %*% beta4 + rnorm(1, mean = 0, sd = 1) 
+DGP5 <- as.matrix(covariates[, -1]) %*% beta5 + rnorm(1, mean = 0, sd = 1)
+
+# Combine Y and X
+# Jeg tror jeg skal hav Y og X i et samlet datasæt efter at have kigget lidt på gammel kode hvor vi lave ridge og lasso. Jeg får så
+# 5 datasæt i alt og jeg skal så lave ridge for hver iteration så jeg skal nok have iteration med som første søjle i hvert datasæt og så
+# grouper jeg by iterationen og laver så ridge og lasso
+
+# Test for at vise matrix regning er korrekt - det var den! 
+data_test <- matrix(1:9, nrow  = 3)
+covariates_test <- matrix(3:5, nrow = 3)
+
+y <- data_test %*% covariates_test + 1 # +1 er error term holder
+
+# Når jeg laver ridge og lasso så, så tror jeg, at jeg skal lave til tibble og så group_by iteration og så for hver group laver jeg det så. 
+
+
+
+# Her skal vi have 5 y'er; en for hver radius. Vi får 1 y for hver observation af X, i.e. 50 y'er til hver iteration, vi har så 5 radiuser
+# hvor vi gør det med hver af dem 
 
 # 1. Vi simulerer covariates
 # 2. Vi laver coefficient cluster - draw med replacement sætter prob op så der er 2 * rc - 1 i hvert cluster, og hvis de trækker du ik nul --> giv den en værdi omkring center + et stochastic shock
