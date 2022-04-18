@@ -119,6 +119,12 @@ table1 <- table_theme(rbind(head(covariates, 4), tail(covariates, 3)) %>% select
                       caption = "Sample of simulated data from simCovariates()", escape = FALSE) %>% 
   kable_styling(latex_options = "scale_down")
 
+# Table 1 - Snip of covariates (Small)
+table1_names <- c("Iteration", "X_1", "X_2", "X_3", "X_4", "X_5", "Dots", "X_{36}", "X_{37}", "X_{38}", "X_{39}", "X_{40}")
+table1 <- table_theme(rbind(head(covariates, 4), tail(covariates, 3)) %>% select(Iteration, X1:X6, X36:X40), colnames = table1_names, 
+                      caption = "Sample of simulated data from simCovariates()", escape = FALSE) %>% 
+  kable_styling(latex_options = "scale_down")
+
 # Figure 1 - Distribution of Covariates
 norm_dist_df <- as.tibble(to_vec(for (i in 1:variables) runif(1, min = 1, max = 1.3) ** log(i))) %>% 
   `colnames<-`("sd") %>% 
@@ -234,7 +240,7 @@ table2 <- table_theme(map_df(.x = beta,
                                                  coeff_total = 40)) 
                                
                              }) %>% add_column(seq(5), .before = "coeff"), 
-                      colnames = table2_names, caption = "Coeffcients in each cluster") %>% 
+                      colnames = table2_names, caption = "Coeffcient Clusters") %>% 
   kable_styling(latex_options = "scale_down")
 
 
@@ -244,17 +250,126 @@ table2 <- table_theme(map_df(.x = beta,
 #   * jeg bør måske sætte seed her, så error term bliver ens? 
 #   * Jeg kan formentlig også skrive det op på en lidt mere elegant måde? 
 
-# DGP 
+# DGP (number corresponds to cluster radius) - there is most likely a neater (more elegant) way to code this up
 DGP1 <- as.matrix(covariates[, -1]) %*% beta1 + rnorm(1, mean = 0, sd = 1)
 DGP2 <- as.matrix(covariates[, -1]) %*% beta2 + rnorm(1, mean = 0, sd = 1)
 DGP3 <- as.matrix(covariates[, -1]) %*% beta3 + rnorm(1, mean = 0, sd = 1)
 DGP4 <- as.matrix(covariates[, -1]) %*% beta4 + rnorm(1, mean = 0, sd = 1) 
 DGP5 <- as.matrix(covariates[, -1]) %*% beta5 + rnorm(1, mean = 0, sd = 1)
 
-# Combine Y and X
-# Jeg tror jeg skal hav Y og X i et samlet datasæt efter at have kigget lidt på gammel kode hvor vi lave ridge og lasso. Jeg får så
-# 5 datasæt i alt og jeg skal så lave ridge for hver iteration så jeg skal nok have iteration med som første søjle i hvert datasæt og så
-# grouper jeg by iterationen og laver så ridge og lasso
+# Combine Y and X - there is most likely a neater (more elegant) way to code this up 
+data1 <- as.tibble(cbind(DGP1, covariates[, -1])) %>% 
+  add_column(covariates[, 1], .before = "DGP1") %>% 
+  rename(DGP = DGP1)
+
+data2 <- as.tibble(cbind(DGP2, covariates[, -1])) %>% 
+  add_column(covariates[, 1], .before = "DGP2") %>% 
+  rename(DGP = DGP2)
+
+data3 <- as.tibble(cbind(DGP3, covariates[, -1])) %>% 
+  add_column(covariates[, 1], .before = "DGP3") %>% 
+  rename(DGP = DGP3)   
+
+data4 <- as.tibble(cbind(DGP4, covariates[, -1])) %>% 
+  add_column(covariates[, 1], .before = "DGP4") %>% 
+  rename(DGP = DGP4)  
+
+data5 <- as.tibble(cbind(DGP5, covariates[, -1])) %>% 
+  add_column(covariates[, 1], .before = "DGP5") %>% 
+  rename(DGP = DGP5)
+
+### 4. Machine Learning (Subsetting) ------------------------------------------
+
+# Experiment #1 
+RL_mse <- function(RL = 0, radius, folds = 10) { # RL is a dummy indicating ridge or lasso. radius indicates data set. 
+
+  # The function RL_mse returns one MSE the 200 iterations of either the ridge or lasso subset regression methodology. 
+  # The chosen regression has been subject to 10 folds cross valiation (CV). 
+  
+  # RL = 0 --> ridge; RL = 1 --> lasso
+  
+  # Initialize empty data holder
+  data <- NULL
+  MSEs <- NULL
+  
+  # Assign data
+  ifelse(radius == 1, data <- data1, 
+         ifelse(radius == 2, data <- data2, 
+                ifelse(radius == 3, data <- data3, 
+                       ifelse(radius == 4, data <- data4,
+                              ifelse(radius == 5, data <- data5, data <- data1)))))
+  
+  for (i in 1:nrow(unique(data[, 1]))) { # 200 iterations 
+    
+    # Initialize data holder for each iteration
+    data_ite <- data %>% 
+      filter(Iteration == i)
+    
+    # Separate data in training and test set 80-20 split 
+    test_index <- sample(nrow(data_ite), size = round(0.1 * nrow(data_ite)))
+    test_data <- data_ite[test_index, ] %>% select(-Iteration)
+    train_data <- data_ite[-test_index, ] %>% select(-Iteration)
+    
+    # Perform CV on training set
+    CV <- cv.glmnet(x = as.matrix(train_data[, 2:41]), y = as.matrix(train_data[, 1]), alpha = RL, nfolds = folds)
+    
+    # Carry out subset regression
+    RLreg <- glmnet::glmnet(y = as.matrix(train_data$DGP), x = as.matrix(train_data[, 2:41]), alpha = RL, lambda = CV$lambda.min)
+    
+    # Compute MSE
+    RL_hat <- predict(RLreg, as.matrix(test_data[, 2:41]))
+    RL_MSE <- apply((test_data$DGP - RL_hat) ** 2, MARGIN = 2, FUN = mean)
+
+    # Store MSE
+    MSEs <- rbind(MSEs, RL_MSE)
+    
+  }
+  
+  # Compute mean MSE of 200 iterations
+  MSE <- apply(MSEs, MARGIN = 2, FUN = mean)
+  
+  return(MSE)
+  
+
+  # Det kan være jeg skal udvide funktionen til også at klar forward eller backward regression - jeg kan gøre det med dummy, hvor jeg laver if
+  # statement, og så tager hele ridge lasso del af funktionen hvis dummy = 1 og eller så tager jeg back stepwise regression hvis dummy = 0
+  
+}
+
+# Ridge - Radius 1 through 5
+# * Ridge giver nogle meget store MSES, er det: 1) kodefejl?, 2) prøv at se hvis jeg gør clusters mean større, 3) hvad hvis vi øger obs?
+# Jeg ændrede splittet fra 80-20 til 90-10 - hjalp meget! jeg skal måske lige tilføj et par obserevationr! 
+Ridge1 <- RL_mse(RL = 0, radius = 1, folds = 10)
+Ridge2 <- RL_mse(RL = 0, radius = 2, folds = 10)
+Ridge3 <- RL_mse(RL = 0, radius = 3, folds = 10)
+Ridge4 <- RL_mse(RL = 0, radius = 4, folds = 10)
+Ridge5 <- RL_mse(RL = 0, radius = 5, folds = 10)
+
+# Lasso - Radius 1 through 5
+# Lasso har stadig 80-20 splittet 
+Lasso1 <- RL_mse(RL = 1, radius = 1, folds = 10)
+Lasso2 <- RL_mse(RL = 1, radius = 2, folds = 10)
+Lasso3 <- RL_mse(RL = 1, radius = 3, folds = 10)
+Lasso4 <- RL_mse(RL = 1, radius = 4, folds = 10)
+Lasso5 <- RL_mse(RL = 1, radius = 5, folds = 10)
+
+
+# Vi ser i det første eksperiment på hvordan ridge og lasso predicter igennem cluster radius. Men vi har ret få observationer; kun lidt flere end
+# covariates - typisk vil vi have bare lidt flere og det kunne derfor være interessant at se hvor mange observationer vi egentlig skal bruge før
+# vi får en form for konvergens; hvornår bliver ridge og lasso gode; hvor mange observationer før de bliver gode? og hvordan ser konvergensen
+# ud? e.g. er de MEGET ringe i starten (som det viste ridge var med 40 obs) og så bliver de hurtigere bedre, eller er konvergensen mere lineær?
+# Det kan som sagt tale til hvor mange obserevationer der skal til før vi kan bruge ridge og lasso til noget, i.e. i hvilke casees kan vi 
+# bruge den metode til noget? Det kan i en situation sættes i perspektiv til andre ML metoder? f.eks. deep learning, som vist skal brugee
+# mere data. 
+
+# Det eksperiment bliver så for en given cluster størrelse - men jeg kan vælge flere, måske 1, 3 og 5 og så se hvordan konvergens er der. Jeg 
+# computer så MSE gennem antal observationer
+
+# Ridge & Lasso
+ridgeeq <- glmnet::glmnet(y = as.matrix(train_data$DGP), x = as.matrix(train_data[, 3:42]), alpha = 0, lambda = 1)
+ridge_hat <- predict(ridgeeq, as.matrix(test_data[, 3:42]))
+ridge_mse <- apply((test_data$DGP - ridge_hat) ** 2, MARGIN = 2, FUN = mean)
+
 
 # Test for at vise matrix regning er korrekt - det var den! 
 data_test <- matrix(1:9, nrow  = 3)
@@ -262,23 +377,19 @@ covariates_test <- matrix(3:5, nrow = 3)
 
 y <- data_test %*% covariates_test + 1 # +1 er error term holder
 
-# Når jeg laver ridge og lasso så, så tror jeg, at jeg skal lave til tibble og så group_by iteration og så for hver group laver jeg det så. 
 
-
-
-# Her skal vi have 5 y'er; en for hver radius. Vi får 1 y for hver observation af X, i.e. 50 y'er til hver iteration, vi har så 5 radiuser
-# hvor vi gør det med hver af dem 
 
 # 1. Vi simulerer covariates
 # 2. Vi laver coefficient cluster - draw med replacement sætter prob op så der er 2 * rc - 1 i hvert cluster, og hvis de trækker du ik nul --> giv den en værdi omkring center + et stochastic shock
 # 3. Vi simulerer vores DGP
 # 4. Vi har nu data --> vi laver Ridge, lasso, stepwise forward + CV og genererer MSE
 
-# Hvis jeg ikke når at kode hele simulationssetupet inden mødet, så skal jeg have skrrevet ned præcis hvordan jeg vil gøre, så jeg kan spørge! 
 
 
 ### 2. Run Diagnostics -----------------------------------------------------
 
+
+# Tilføj noget med at diagnostics er blevet carried out i de forskellige dele af scripted da programmet her ikke taget noget input 
 # Check dataset balanced (all dates have equal number of observations)
 if(length(unique(table(dat$date))) != 1){
   log <- c(log, "-- Not all dates have equal number of observations --")
