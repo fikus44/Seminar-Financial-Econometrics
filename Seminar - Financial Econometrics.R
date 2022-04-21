@@ -120,6 +120,7 @@ table1 <- table_theme(rbind(head(covariates, 4), tail(covariates, 3)) %>% select
   kable_styling(latex_options = "scale_down")
 
 # Table 1 - Snip of covariates (Small)
+# The table is modified slight in LaTeX
 table1_names <- c("Iteration", "X_1", "X_2", "X_3", "X_4", "X_5", "Dots", "X_{36}", "X_{37}", "X_{38}", "X_{39}", "X_{40}")
 table1 <- table_theme(rbind(head(covariates, 4), tail(covariates, 3)) %>% select(Iteration, X1:X6, X36:X40), colnames = table1_names, 
                       caption = "Sample of simulated data from simCovariates()", escape = FALSE) %>% 
@@ -134,7 +135,8 @@ figure_1 <- ggplot(data = data.frame(x = c(-7, 7)), aes(x)) +
   map2(.x = t(norm_dist_df)[1, ], .y = t(norm_dist_df)[2, ],
        .f = ~stat_function(fun = dnorm, n = 101, args = list(mean = .x, sd = .y))) +
   labs(y = "f(x)") + 
-  theme_article()
+  theme_article() +
+  theme(text = element_text(size = 15))
   #scale_y_continuous(breaks = NULL)
 
 ggsave("figure1.pdf", plot=figure_1, width = 20, height = 18, units= "cm", dpi = 300)
@@ -202,27 +204,29 @@ coefCluster <- function(betas = variables, center = c(1,3,5), radius = 5) {
 }
 
 # Betas - 5 set of betas one for each radius
-beta1 <- coefCluster(radius = 1)
-beta2 <- coefCluster(radius = 2)
-beta3 <- coefCluster(radius = 3)
-beta4 <- coefCluster(radius = 4)
-beta5 <- coefCluster(radius = 5)
-beta <- as.tibble(cbind(beta1, beta2, beta3, beta4, beta5)) # as.tibble and not matrix to make it compatible with e.g. map_df()
+beta1 <- coefCluster(radius = 1, center = c(1,3,5))
+beta2 <- coefCluster(radius = 2, center = c(1,3,5))
+beta3 <- coefCluster(radius = 3, center = c(1,3,5))
+beta4 <- coefCluster(radius = 4, center = c(1,3,5))
+beta5 <- coefCluster(radius = 5, center = c(1,3,5))
+beta6 <- coefCluster(radius = 6, center = c(1,3,5))
+beta7 <- coefCluster(radius = 7, center = c(1,3,5))
+beta <- as.tibble(cbind(beta1, beta2, beta3, beta4, beta5, beta6, beta7)) # as.tibble and not matrix to make it compatible with e.g. map_df()
 
 # Figure 2 - 2D plot of the coefficient cluster
 figure_2A <- ggplot() + 
   geom_rect(aes(xmin = 0, xmax = 5, ymin = 0, ymax = 8), 
-            fill = "blue", alpha = 0.0, color = "white") +
+            fill = "#00BFC4", alpha = 0.0, color = "white") +
   geom_rect(aes(xmin = 0, xmax = 2, ymin = 2, ymax = 4),
-            fill = "blue", alpha = 0.5, color = "black", size = 0.4) + 
+            fill = "#00BFC4", alpha = 0.5, color = "black", size = 0.4) + 
   labs(x = "Coefficient Cluster 1", y = "Coefficient Cluster 2") +
   theme_article()
 
 figure_2B <- ggplot() +
   geom_rect(aes(xmin = 0, xmax = 5, ymin = 0, ymax = 8), 
-            fill = "blue", alpha = 0.0, color = "white")  +
+            fill = "#F8766D", alpha = 0.0, color = "white")  +
   geom_rect(aes(xmin = 0, xmax = 2, ymin = 4, ymax = 6),
-            fill = "orange", alpha = 0.8, color = "black", size = 0.4) +
+            fill = "#F8766D", alpha = 0.8, color = "black", size = 0.4) +
   labs(x = "Coefficient Cluster 1", y = "Coefficient Cluster 3") +
   theme_article()
 
@@ -239,7 +243,7 @@ table2 <- table_theme(map_df(.x = beta,
                                                  coeff_zero = 40 - length(unique(.x)) + 1,
                                                  coeff_total = 40)) 
                                
-                             }) %>% add_column(seq(5), .before = "coeff"), 
+                             }) %>% add_column(seq(7), .before = "coeff"), 
                       colnames = table2_names, caption = "Coeffcient Clusters") %>% 
   kable_styling(latex_options = "scale_down")
 
@@ -256,6 +260,8 @@ DGP2 <- as.matrix(covariates[, -1]) %*% beta2 + rnorm(1, mean = 0, sd = 1)
 DGP3 <- as.matrix(covariates[, -1]) %*% beta3 + rnorm(1, mean = 0, sd = 1)
 DGP4 <- as.matrix(covariates[, -1]) %*% beta4 + rnorm(1, mean = 0, sd = 1) 
 DGP5 <- as.matrix(covariates[, -1]) %*% beta5 + rnorm(1, mean = 0, sd = 1)
+DGP6 <- as.matrix(covariates[, -1]) %*% beta6 + rnorm(1, mean = 0, sd = 1) 
+DGP7 <- as.matrix(covariates[, -1]) %*% beta7 + rnorm(1, mean = 0, sd = 1)
 
 # Combine Y and X - there is most likely a neater (more elegant) way to code this up 
 data1 <- as.tibble(cbind(DGP1, covariates[, -1])) %>% 
@@ -278,10 +284,18 @@ data5 <- as.tibble(cbind(DGP5, covariates[, -1])) %>%
   add_column(covariates[, 1], .before = "DGP5") %>% 
   rename(DGP = DGP5)
 
-### 4. Machine Learning (Subsetting) ------------------------------------------
+data6 <- as.tibble(cbind(DGP6, covariates[, -1])) %>% 
+  add_column(covariates[, 1], .before = "DGP6") %>% 
+  rename(DGP = DGP6)
+
+data7 <- as.tibble(cbind(DGP7, covariates[, -1])) %>% 
+  add_column(covariates[, 1], .before = "DGP7") %>% 
+  rename(DGP = DGP7)
+
+### 4. Experiment 1 ------------------------------------------------------------
 
 # Experiment #1 
-RL_mse <- function(RL = 0, radius, folds = 10) { # RL is a dummy indicating ridge or lasso. radius indicates data set. 
+RL_mse <- function(RL = 0, radius, folds = 10, output = 1) { # RL is a dummy indicating ridge or lasso. radius indicates data set. 
 
   # The function RL_mse returns one MSE the 200 iterations of either the ridge or lasso subset regression methodology. 
   # The chosen regression has been subject to 10 folds cross valiation (CV). 
@@ -297,7 +311,9 @@ RL_mse <- function(RL = 0, radius, folds = 10) { # RL is a dummy indicating ridg
          ifelse(radius == 2, data <- data2, 
                 ifelse(radius == 3, data <- data3, 
                        ifelse(radius == 4, data <- data4,
-                              ifelse(radius == 5, data <- data5, data <- data1)))))
+                              ifelse(radius == 5, data <- data5,
+                                     ifelse(radius == 6, data <- data6, 
+                                            ifelse(radius == 7, data <- data7, data <- NULL)))))))
   
   for (i in 1:nrow(unique(data[, 1]))) { # 200 iterations 
     
@@ -306,7 +322,7 @@ RL_mse <- function(RL = 0, radius, folds = 10) { # RL is a dummy indicating ridg
       filter(Iteration == i)
     
     # Separate data in training and test set 80-20 split 
-    test_index <- sample(nrow(data_ite), size = round(0.1 * nrow(data_ite)))
+    test_index <- sample(nrow(data_ite), size = round(0.2 * nrow(data_ite)))
     test_data <- data_ite[test_index, ] %>% select(-Iteration)
     train_data <- data_ite[-test_index, ] %>% select(-Iteration)
     
@@ -328,7 +344,20 @@ RL_mse <- function(RL = 0, radius, folds = 10) { # RL is a dummy indicating ridg
   # Compute mean MSE of 200 iterations
   MSE <- apply(MSEs, MARGIN = 2, FUN = mean)
   
-  return(MSE)
+  if (output == 1) {
+    return(MSE)
+  }
+  
+  if (output == 0) {
+    
+    # Compability with ggplot (figure 3)
+    MSEs <- as.tibble(MSEs) %>% 
+      mutate(iteration = seq(200), cluster_radius = radius)
+
+    return(MSEs)
+    
+  }
+  
   
 
   # Det kan være jeg skal udvide funktionen til også at klar forward eller backward regression - jeg kan gøre det med dummy, hvor jeg laver if
@@ -336,22 +365,109 @@ RL_mse <- function(RL = 0, radius, folds = 10) { # RL is a dummy indicating ridg
   
 }
 
-# Ridge - Radius 1 through 5
-# * Ridge giver nogle meget store MSES, er det: 1) kodefejl?, 2) prøv at se hvis jeg gør clusters mean større, 3) hvad hvis vi øger obs?
-# Jeg ændrede splittet fra 80-20 til 90-10 - hjalp meget! jeg skal måske lige tilføj et par obserevationr! 
-Ridge1 <- RL_mse(RL = 0, radius = 1, folds = 10)
-Ridge2 <- RL_mse(RL = 0, radius = 2, folds = 10)
-Ridge3 <- RL_mse(RL = 0, radius = 3, folds = 10)
-Ridge4 <- RL_mse(RL = 0, radius = 4, folds = 10)
-Ridge5 <- RL_mse(RL = 0, radius = 5, folds = 10)
+# Ridge MSE - Radius 1 through 7
+ridge1 <- RL_mse(RL = 0, radius = 1, folds = 10)
+ridge2 <- RL_mse(RL = 0, radius = 2, folds = 10)
+ridge3 <- RL_mse(RL = 0, radius = 3, folds = 10)
+ridge4 <- RL_mse(RL = 0, radius = 4, folds = 10)
+ridge5 <- RL_mse(RL = 0, radius = 5, folds = 10)
+ridge6 <- RL_mse(RL = 0, radius = 6, folds = 10)
+ridge7 <- RL_mse(RL = 0, radius = 7, folds = 10)
 
-# Lasso - Radius 1 through 5
-# Lasso har stadig 80-20 splittet 
-Lasso1 <- RL_mse(RL = 1, radius = 1, folds = 10)
-Lasso2 <- RL_mse(RL = 1, radius = 2, folds = 10)
-Lasso3 <- RL_mse(RL = 1, radius = 3, folds = 10)
-Lasso4 <- RL_mse(RL = 1, radius = 4, folds = 10)
-Lasso5 <- RL_mse(RL = 1, radius = 5, folds = 10)
+# Lasso MSE - Radius 1 through 7
+lasso1 <- RL_mse(RL = 1, radius = 1, folds = 10)
+lasso2 <- RL_mse(RL = 1, radius = 2, folds = 10)
+lasso3 <- RL_mse(RL = 1, radius = 3, folds = 10)
+lasso4 <- RL_mse(RL = 1, radius = 4, folds = 10)
+lasso5 <- RL_mse(RL = 1, radius = 5, folds = 10)
+lasso6 <- RL_mse(RL = 1, radius = 6, folds = 10)
+lasso7 <- RL_mse(RL = 1, radius = 7, folds = 10)
+
+# Compile data in single tibble 
+ridge_data <- rbind(ridge1, ridge2, ridge3, ridge4, ridge5, ridge6, ridge7)
+lasso_data <- rbind(lasso1, lasso2, lasso3, lasso4, lasso5, lasso6, lasso7)
+RL_MSE <- as.tibble(cbind(ridge_data, lasso_data)) %>% 
+  rename(ridge_MSE = s0, lasso_MSE = V2)
+
+
+# MSEs for figure 3 - Ridge
+ridge1_mses <- RL_mse(RL = 0, radius = 1, folds = 10, output = 0)
+ridge2_mses <- RL_mse(RL = 0, radius = 2, folds = 10, output = 0)
+ridge3_mses <- RL_mse(RL = 0, radius = 3, folds = 10, output = 0)
+ridge4_mses <- RL_mse(RL = 0, radius = 4, folds = 10, output = 0)
+ridge5_mses <- RL_mse(RL = 0, radius = 5, folds = 10, output = 0)
+ridge6_mses <- RL_mse(RL = 0, radius = 6, folds = 10, output = 0)
+ridge7_mses <- RL_mse(RL = 0, radius = 7, folds = 10, output = 0)
+
+# MSEs for figure 3 - Lasso
+lasso1_mses <- RL_mse(RL = 1, radius = 1, folds = 10, output = 0)
+lasso2_mses <- RL_mse(RL = 1, radius = 2, folds = 10, output = 0)
+lasso3_mses <- RL_mse(RL = 1, radius = 3, folds = 10, output = 0)
+lasso4_mses <- RL_mse(RL = 1, radius = 4, folds = 10, output = 0)
+lasso5_mses <- RL_mse(RL = 1, radius = 5, folds = 10, output = 0)
+lasso6_mses <- RL_mse(RL = 1, radius = 6, folds = 10, output = 0)
+lasso7_mses <- RL_mse(RL = 1, radius = 7, folds = 10, output = 0)
+
+# Compile MSEs in single tibble
+ridge_data_figure3 <- rbind(ridge1_mses, ridge2_mses, ridge3_mses, ridge4_mses, ridge5_mses, ridge6_mses, ridge7_mses) %>% 
+  arrange(iteration, cluster_radius)
+
+lasso_data_figure3 <- rbind(lasso1_mses, lasso2_mses, lasso3_mses, lasso4_mses, lasso5_mses, lasso6_mses, lasso7_mses) %>% 
+  arrange(iteration, cluster_radius)
+
+# # Compile data in single tibble for old figure 3
+# ridge_data_figure3 <- as.tibble(cbind(ridge1_mses, ridge2_mses, ridge3_mses, ridge4_mses, ridge5_mses, ridge6_mses, ridge7_mses)) %>% 
+#   `colnames<-`(c("1", "2", "3", "4", "5", "6", "7"))
+
+# # Figure 3 - MSE through cluster radius 
+# figure3_old <- ggplot() +
+#   geom_line(data = RL_MSE, aes(y = ridge_MSE, x = seq(7), col = "Ridge"), size = 1) +
+#   geom_line(data = RL_MSE, aes(y = lasso_MSE, x = seq(7), col = "Lasso"), size = 1) +
+#   geom_point(data = RL_MSE, aes(y = ridge_MSE, x = seq(7))) +
+#   geom_point(data = RL_MSE, aes(y = lasso_MSE, x = seq(7))) +
+#   theme_article() +
+#   labs(x = "Cluster Radius", y = "MSE", col='') + # Legend title
+#   theme(legend.position = "bottom") + 
+#   theme(text = element_text(size = 15))
+# 
+# ggsave("figure3_old.pdf", plot=figure3_old, width = 20, height = 18, units= "cm", dpi = 300)
+
+# Figure 3 - Experiment 1 output (MSE through cluster radius)
+figure_3A <- ggplot(ridge_data_figure3) +
+  geom_line(aes(cluster_radius, s0, color = as.factor(iteration)), alpha = 0.1, size = 0.01) +
+  scale_color_discrete(name = "Date") + 
+  scale_y_continuous(limits = c(0, 80)) + # Removes extreme observations above 80 MSE
+  theme_article() + 
+  theme(legend.position = "none") + # Removes legend altogether 
+  scale_color_manual(values = rep("#00BFC4", 201)) + 
+  labs(x = "Cluster Radius", y = "MSE") +
+  geom_line(data = RL_MSE, aes(y = ridge_MSE, x = seq(7), col = "Ridge"), size = 1) # Add average MSE 
+
+figure_3B <- ggplot(lasso_data_figure3) +
+  geom_line(aes(cluster_radius, s0, color = as.factor(iteration)), alpha = 0.1, size = 0.01) +
+  scale_color_discrete(name = "Date") + 
+  scale_y_continuous(limits = c(0, 80)) + # Removes extreme observations above 80 MSE
+  theme_article() + 
+  theme(legend.position = "none") + # Removes legend altogether 
+  scale_color_manual(values = rep("#F8766D", 201)) + 
+  labs(x = "Cluster Radius", y = "MSE") +
+  geom_line(data = RL_MSE, aes(y = lasso_MSE, x = seq(7), col = "Lasso"), size = 1) # Add average MSE 
+
+figure3 <- gridExtra::grid.arrange(figure_3A, figure_3B, ncol = 2)
+ggsave("figure3.pdf", plot=figure3, width = 25, height = 10, units= "cm", dpi = 300)
+
+
+ggsave("figure3.pdf", plot=figure_3, width = 20, height = 18, units= "cm", dpi = 300)
+
+#Table 3 - Experiment 1 output (MSE through cluster radius) 
+# The table is modified slightly in LaTeX to allow for the multi-column
+table3_names <- c("1", "2", "3", "4", "5", "6", "7" )
+table3 <- table_theme(t(RL_MSE), colnames = table3_names, caption = "Experiment 1: MSE through coefficent cluster radius'", escape = TRUE) %>% 
+  kable_styling(latex_options = "scale_down")
+  
+### 5. Experiment 2 ------------------------------------------------------------
+
+
 
 
 # Vi ser i det første eksperiment på hvordan ridge og lasso predicter igennem cluster radius. Men vi har ret få observationer; kun lidt flere end
@@ -362,8 +478,15 @@ Lasso5 <- RL_mse(RL = 1, radius = 5, folds = 10)
 # bruge den metode til noget? Det kan i en situation sættes i perspektiv til andre ML metoder? f.eks. deep learning, som vist skal brugee
 # mere data. 
 
+# Jeg tror vi vil se at lasso konvergerer hurtigere - hvertfald for lineære modeller, som er det vi ser på. 
+
 # Det eksperiment bliver så for en given cluster størrelse - men jeg kan vælge flere, måske 1, 3 og 5 og så se hvordan konvergens er der. Jeg 
 # computer så MSE gennem antal observationer
+
+
+# det kunne måske være cool i figuren at have en linje for hver iteration og så kan average være ekstra fed! Jeg kan gøre det samme i 
+# eksperiment 2 her bliver det så bare med MSE på 2. aksen og antal obs. på 1 aksen i stedet for cluster radius.
+
 
 # Ridge & Lasso
 ridgeeq <- glmnet::glmnet(y = as.matrix(train_data$DGP), x = as.matrix(train_data[, 3:42]), alpha = 0, lambda = 1)
