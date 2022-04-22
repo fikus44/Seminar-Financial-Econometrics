@@ -295,34 +295,33 @@ data7 <- as.tibble(cbind(DGP7, covariates[, -1])) %>%
 ### 4. Experiment 1 ------------------------------------------------------------
 
 # Experiment #1 
-RL_mse <- function(RL = 0, radius, folds = 10, output = 1) { # RL is a dummy indicating ridge or lasso. radius indicates data set. 
+RL_mse <- function(RL = 0, data, folds = 10, output = 1, split = 0.10, radius = 1) { # RL is a dummy indicating ridge or lasso. radius indicates data set. 
 
   # The function RL_mse returns one MSE the 200 iterations of either the ridge or lasso subset regression methodology. 
   # The chosen regression has been subject to 10 folds cross valiation (CV). 
   
   # RL = 0 --> ridge; RL = 1 --> lasso
   
-  # Initialize empty data holder
-  data <- NULL
+  # Initialize empty holder for MSEs
   MSEs <- NULL
   
-  # Assign data
-  ifelse(radius == 1, data <- data1, 
-         ifelse(radius == 2, data <- data2, 
-                ifelse(radius == 3, data <- data3, 
-                       ifelse(radius == 4, data <- data4,
-                              ifelse(radius == 5, data <- data5,
-                                     ifelse(radius == 6, data <- data6, 
-                                            ifelse(radius == 7, data <- data7, data <- NULL)))))))
-  
+  # # Assign data - old with radius input 
+  # ifelse(radius == 1, data <- data1, 
+  #        ifelse(radius == 2, data <- data2, 
+  #               ifelse(radius == 3, data <- data3, 
+  #                      ifelse(radius == 4, data <- data4,
+  #                             ifelse(radius == 5, data <- data5,
+  #                                    ifelse(radius == 6, data <- data6, 
+  #                                           ifelse(radius == 7, data <- data7, data <- NULL)))))))
+
   for (i in 1:nrow(unique(data[, 1]))) { # 200 iterations 
     
     # Initialize data holder for each iteration
     data_ite <- data %>% 
       filter(Iteration == i)
     
-    # Separate data in training and test set 80-20 split 
-    test_index <- sample(nrow(data_ite), size = round(0.2 * nrow(data_ite)))
+    # Separate data in training and test set 90-10 split 
+    test_index <- sample(nrow(data_ite), size = round(split * nrow(data_ite)))
     test_data <- data_ite[test_index, ] %>% select(-Iteration)
     train_data <- data_ite[-test_index, ] %>% select(-Iteration)
     
@@ -366,22 +365,22 @@ RL_mse <- function(RL = 0, radius, folds = 10, output = 1) { # RL is a dummy ind
 }
 
 # Ridge MSE - Radius 1 through 7
-ridge1 <- RL_mse(RL = 0, radius = 1, folds = 10)
-ridge2 <- RL_mse(RL = 0, radius = 2, folds = 10)
-ridge3 <- RL_mse(RL = 0, radius = 3, folds = 10)
-ridge4 <- RL_mse(RL = 0, radius = 4, folds = 10)
-ridge5 <- RL_mse(RL = 0, radius = 5, folds = 10)
-ridge6 <- RL_mse(RL = 0, radius = 6, folds = 10)
-ridge7 <- RL_mse(RL = 0, radius = 7, folds = 10)
+ridge1 <- RL_mse(RL = 0, data = data1, folds = 10)
+ridge2 <- RL_mse(RL = 0, data = data2, folds = 10)
+ridge3 <- RL_mse(RL = 0, data = data3, folds = 10)
+ridge4 <- RL_mse(RL = 0, data = data4, folds = 10)
+ridge5 <- RL_mse(RL = 0, data = data5, folds = 10)
+ridge6 <- RL_mse(RL = 0, data = data6, folds = 10)
+ridge7 <- RL_mse(RL = 0, data = data7, folds = 10)
 
 # Lasso MSE - Radius 1 through 7
-lasso1 <- RL_mse(RL = 1, radius = 1, folds = 10)
-lasso2 <- RL_mse(RL = 1, radius = 2, folds = 10)
-lasso3 <- RL_mse(RL = 1, radius = 3, folds = 10)
-lasso4 <- RL_mse(RL = 1, radius = 4, folds = 10)
-lasso5 <- RL_mse(RL = 1, radius = 5, folds = 10)
-lasso6 <- RL_mse(RL = 1, radius = 6, folds = 10)
-lasso7 <- RL_mse(RL = 1, radius = 7, folds = 10)
+lasso1 <- RL_mse(RL = 1, data = data1, folds = 10, split = 0.15)
+lasso2 <- RL_mse(RL = 1, data = data2, folds = 10, split = 0.15)
+lasso3 <- RL_mse(RL = 1, data = data3, folds = 10, split = 0.15)
+lasso4 <- RL_mse(RL = 1, data = data4, folds = 10, split = 0.15)
+lasso5 <- RL_mse(RL = 1, data = data5, folds = 10, split = 0.15)
+lasso6 <- RL_mse(RL = 1, data = data6, folds = 10, split = 0.15)
+lasso7 <- RL_mse(RL = 1, data = data7, folds = 10, split = 0.15)
 
 # Compile data in single tibble 
 ridge_data <- rbind(ridge1, ridge2, ridge3, ridge4, ridge5, ridge6, ridge7)
@@ -391,22 +390,22 @@ RL_MSE <- as.tibble(cbind(ridge_data, lasso_data)) %>%
 
 
 # MSEs for figure 3 - Ridge
-ridge1_mses <- RL_mse(RL = 0, radius = 1, folds = 10, output = 0)
-ridge2_mses <- RL_mse(RL = 0, radius = 2, folds = 10, output = 0)
-ridge3_mses <- RL_mse(RL = 0, radius = 3, folds = 10, output = 0)
-ridge4_mses <- RL_mse(RL = 0, radius = 4, folds = 10, output = 0)
-ridge5_mses <- RL_mse(RL = 0, radius = 5, folds = 10, output = 0)
-ridge6_mses <- RL_mse(RL = 0, radius = 6, folds = 10, output = 0)
-ridge7_mses <- RL_mse(RL = 0, radius = 7, folds = 10, output = 0)
+ridge1_mses <- RL_mse(RL = 0, data = data1, folds = 10, output = 0, radius = 1)
+ridge2_mses <- RL_mse(RL = 0, data = data2, folds = 10, output = 0, radius = 2)
+ridge3_mses <- RL_mse(RL = 0, data = data3, folds = 10, output = 0, radius = 3)
+ridge4_mses <- RL_mse(RL = 0, data = data4, folds = 10, output = 0, radius = 4)
+ridge5_mses <- RL_mse(RL = 0, data = data5, folds = 10, output = 0, radius = 5)
+ridge6_mses <- RL_mse(RL = 0, data = data6, folds = 10, output = 0, radius = 6)
+ridge7_mses <- RL_mse(RL = 0, data = data7, folds = 10, output = 0, radius = 7)
 
 # MSEs for figure 3 - Lasso
-lasso1_mses <- RL_mse(RL = 1, radius = 1, folds = 10, output = 0)
-lasso2_mses <- RL_mse(RL = 1, radius = 2, folds = 10, output = 0)
-lasso3_mses <- RL_mse(RL = 1, radius = 3, folds = 10, output = 0)
-lasso4_mses <- RL_mse(RL = 1, radius = 4, folds = 10, output = 0)
-lasso5_mses <- RL_mse(RL = 1, radius = 5, folds = 10, output = 0)
-lasso6_mses <- RL_mse(RL = 1, radius = 6, folds = 10, output = 0)
-lasso7_mses <- RL_mse(RL = 1, radius = 7, folds = 10, output = 0)
+lasso1_mses <- RL_mse(RL = 1, data = data1, folds = 10, output = 0, split = 0.15, radius = 1)
+lasso2_mses <- RL_mse(RL = 1, data = data2, folds = 10, output = 0, split = 0.15, radius = 2)
+lasso3_mses <- RL_mse(RL = 1, data = data3, folds = 10, output = 0, split = 0.15, radius = 3)
+lasso4_mses <- RL_mse(RL = 1, data = data4, folds = 10, output = 0, split = 0.15, radius = 4)
+lasso5_mses <- RL_mse(RL = 1, data = data5, folds = 10, output = 0, split = 0.15, radius = 5)
+lasso6_mses <- RL_mse(RL = 1, data = data6, folds = 10, output = 0, split = 0.15, radius = 6)
+lasso7_mses <- RL_mse(RL = 1, data = data7, folds = 10, output = 0, split = 0.15, radius = 7)
 
 # Compile MSEs in single tibble
 ridge_data_figure3 <- rbind(ridge1_mses, ridge2_mses, ridge3_mses, ridge4_mses, ridge5_mses, ridge6_mses, ridge7_mses) %>% 
@@ -456,9 +455,6 @@ figure_3B <- ggplot(lasso_data_figure3) +
 figure3 <- gridExtra::grid.arrange(figure_3A, figure_3B, ncol = 2)
 ggsave("figure3.pdf", plot=figure3, width = 25, height = 10, units= "cm", dpi = 300)
 
-
-ggsave("figure3.pdf", plot=figure_3, width = 20, height = 18, units= "cm", dpi = 300)
-
 #Table 3 - Experiment 1 output (MSE through cluster radius) 
 # The table is modified slightly in LaTeX to allow for the multi-column
 table3_names <- c("1", "2", "3", "4", "5", "6", "7" )
@@ -469,6 +465,121 @@ table3 <- table_theme(t(RL_MSE), colnames = table3_names, caption = "Experiment 
 
 
 
+# Initiate empty list for figure 4
+figure4 <- list()
+
+exp2_radius <- list(beta1, beta3, beta5, beta7) 
+for (i in enumerate(exp2_radius)) {
+  
+  index <- i[[1]]; beta <- i[[2]]
+  
+  # Covariates
+  exp2_covariates50 <- simCovariates(d = 50, var = 40, ite = 200) 
+  exp2_covariates60 <- simCovariates(d = 60, var = 40, ite = 200) 
+  exp2_covariates70 <- simCovariates(d = 70, var = 40, ite = 200) 
+  exp2_covariates80 <- simCovariates(d = 80, var = 40, ite = 200) 
+  exp2_covariates90 <- simCovariates(d = 90, var = 40, ite = 200)
+  exp2_covariates100 <- simCovariates(d = 100, var = 40, ite = 200)
+  
+  # DGP - given cluster size but differnt number of draws 
+  exp2_DGP50 <- as.matrix(exp2_covariates50[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  exp2_DGP60 <- as.matrix(exp2_covariates60[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  exp2_DGP70 <- as.matrix(exp2_covariates70[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  exp2_DGP80 <- as.matrix(exp2_covariates80[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  exp2_DGP90 <- as.matrix(exp2_covariates90[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  exp2_DGP100 <- as.matrix(exp2_covariates100[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  
+  # Combine Y and X
+  exp2_data50 <- as.tibble(cbind(exp2_DGP50, exp2_covariates50[, -1])) %>% 
+    add_column(exp2_covariates50[, 1], .before = "exp2_DGP50") %>% 
+    rename(DGP = exp2_DGP50)
+  
+  exp2_data60 <- as.tibble(cbind(exp2_DGP60, exp2_covariates60[, -1])) %>% 
+    add_column(exp2_covariates60[, 1], .before = "exp2_DGP60") %>% 
+    rename(DGP = exp2_DGP60)   
+  
+  exp2_data70 <- as.tibble(cbind(exp2_DGP70, exp2_covariates70[, -1])) %>% 
+    add_column(exp2_covariates70[, 1], .before = "exp2_DGP70") %>% 
+    rename(DGP = exp2_DGP70)
+  
+  exp2_data80 <- as.tibble(cbind(exp2_DGP80, exp2_covariates80[, -1])) %>% 
+    add_column(exp2_covariates80[, 1], .before = "exp2_DGP80") %>% 
+    rename(DGP = exp2_DGP80)
+  
+  exp2_data90 <- as.tibble(cbind(exp2_DGP90, exp2_covariates90[, -1])) %>% 
+    add_column(exp2_covariates90[, 1], .before = "exp2_DGP90") %>% 
+    rename(DGP = exp2_DGP90)
+  
+  exp2_data100 <- as.tibble(cbind(exp2_DGP100, exp2_covariates100[, -1])) %>% 
+    add_column(exp2_covariates100[, 1], .before = "exp2_DGP100") %>% 
+    rename(DGP = exp2_DGP100)
+  
+  # Average MSE of either Ridge / Lasso for given cluster radius but with different number of draws 
+  exp2_RL50 <- RL_mse(RL = 0, data = exp2_data50, folds = 10)
+  exp2_RL60 <- RL_mse(RL = 0, data = exp2_data60, folds = 10)
+  exp2_RL70 <- RL_mse(RL = 0, data = exp2_data70, folds = 10)
+  exp2_RL80 <- RL_mse(RL = 0, data = exp2_data80, folds = 10)
+  exp2_RL90 <- RL_mse(RL = 0, data = exp2_data90, folds = 10)
+  exp2_RL100 <- RL_mse(RL = 0, data = exp2_data100, folds = 10)
+  
+  # Combine average MSE
+  exp2_RL_mse <- as.tibble(rbind(exp2_RL50, exp2_RL60, exp2_RL70, exp2_RL80, exp2_RL90, exp2_RL100))
+  
+  # 200 MSEs of either Ridge or Lasso for given cluster radius but with different number of draws
+  exp2_RL50_mses <- RL_mse(RL = 0, data = exp2_data50, folds = 10, output = 0, radius = 1) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 50)
+  exp2_RL60_mses <- RL_mse(RL = 0, data = exp2_data60, folds = 10, output = 0, radius = 1) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 60)
+  exp2_RL70_mses <- RL_mse(RL = 0, data = exp2_data70, folds = 10, output = 0, radius = 1) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 70)
+  exp2_RL80_mses <- RL_mse(RL = 0, data = exp2_data80, folds = 10, output = 0, radius = 1) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 80)
+  exp2_RL90_mses <- RL_mse(RL = 0, data = exp2_data90, folds = 10, output = 0, radius = 1) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 90)
+  exp2_RL100_mses <- RL_mse(RL = 0, data = exp2_data100, folds = 10, output = 0, radius = 1) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 100)
+  
+  # Combine 200 MSEs
+  exp2_ridge_data_figure4 <- rbind(exp2_RL50_mses, exp2_RL60_mses, exp2_RL70_mses, exp2_RL80_mses, exp2_RL90_mses, exp2_RL100_mses) %>% 
+    arrange(iteration, obs)
+  
+  # Figure 4 
+  figure4_temp <- ggplot(exp2_ridge_data_figure4) +
+    geom_line(aes(obs, s0, color = as.factor(iteration)), alpha = 0.1, size = 0.01) +
+    scale_color_discrete(name = "Date") + 
+    scale_y_continuous(limits = c(0, 80)) + # Removes extreme observations above 80 MSE
+    theme_article() + 
+    theme(legend.position = "none") + # Removes legend altogether 
+    scale_color_manual(values = rep("#00BFC4", 201)) + 
+    labs(x = "Observations", y = "MSE") +
+    geom_line(data = exp2_RL_mse, aes(y = s0, x = c(50, 60, 70, 80, 90, 100), col = "Ridge"), size = 1) # Add average MSE 
+  
+  figure4[[index]] <- figure4_temp
+  
+  print(index)
+  
+}
+
+# Figure 4
+figure4_stacked <- gridExtra::grid.arrange(figure4[[1]], figure4[[2]], figure4[[3]], figure4[[4]], ncol = 2)
+ggsave("figure4.pdf", plot=figure4_stacked, width = 20, height = 18, units= "cm", dpi = 300)
+
+
+ 
+
+
+
+
+
+
+# Jeg trækker nu covariatres, herefter krøer vi bare det hele igen; lav DGP og regressioner - men kun for cluster = 1,3,5,7. 
+# Jeg får da MSE og MSES for ridge og lasso jeg skal 
 
 # Vi ser i det første eksperiment på hvordan ridge og lasso predicter igennem cluster radius. Men vi har ret få observationer; kun lidt flere end
 # covariates - typisk vil vi have bare lidt flere og det kunne derfor være interessant at se hvor mange observationer vi egentlig skal bruge før
@@ -478,7 +589,6 @@ table3 <- table_theme(t(RL_MSE), colnames = table3_names, caption = "Experiment 
 # bruge den metode til noget? Det kan i en situation sættes i perspektiv til andre ML metoder? f.eks. deep learning, som vist skal brugee
 # mere data. 
 
-# Jeg tror vi vil se at lasso konvergerer hurtigere - hvertfald for lineære modeller, som er det vi ser på. 
 
 # Det eksperiment bliver så for en given cluster størrelse - men jeg kan vælge flere, måske 1, 3 og 5 og så se hvordan konvergens er der. Jeg 
 # computer så MSE gennem antal observationer
