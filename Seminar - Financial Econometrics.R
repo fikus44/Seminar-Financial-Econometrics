@@ -203,7 +203,7 @@ coefCluster <- function(betas = variables, center = c(1,3,5), radius = 5) {
   
 }
 
-# Betas - 5 set of betas one for each radius
+# Betas - 7 set of betas one for each radius
 beta1 <- coefCluster(radius = 1, center = c(1,3,5))
 beta2 <- coefCluster(radius = 2, center = c(1,3,5))
 beta3 <- coefCluster(radius = 3, center = c(1,3,5))
@@ -468,18 +468,19 @@ table3 <- table_theme(t(RL_MSE), colnames = table3_names, caption = "Experiment 
 # Initiate empty list for figure 4
 figure4 <- list()
 
-exp2_radius <- list(beta1, beta3, beta5, beta7) 
+# Covariates for experiment 2 
+exp2_covariates50 <- simCovariates(d = 50, var = 40, ite = 200) 
+exp2_covariates60 <- simCovariates(d = 60, var = 40, ite = 200) 
+exp2_covariates70 <- simCovariates(d = 70, var = 40, ite = 200) 
+exp2_covariates80 <- simCovariates(d = 80, var = 40, ite = 200) 
+exp2_covariates90 <- simCovariates(d = 90, var = 40, ite = 200)
+exp2_covariates100 <- simCovariates(d = 100, var = 40, ite = 200)
+
+# Experiment 2 loop for Ridge
+exp2_radius <- list(beta1, beta3, beta5, beta7)
 for (i in enumerate(exp2_radius)) {
   
   index <- i[[1]]; beta <- i[[2]]
-  
-  # Covariates
-  exp2_covariates50 <- simCovariates(d = 50, var = 40, ite = 200) 
-  exp2_covariates60 <- simCovariates(d = 60, var = 40, ite = 200) 
-  exp2_covariates70 <- simCovariates(d = 70, var = 40, ite = 200) 
-  exp2_covariates80 <- simCovariates(d = 80, var = 40, ite = 200) 
-  exp2_covariates90 <- simCovariates(d = 90, var = 40, ite = 200)
-  exp2_covariates100 <- simCovariates(d = 100, var = 40, ite = 200)
   
   # DGP - given cluster size but differnt number of draws 
   exp2_DGP50 <- as.matrix(exp2_covariates50[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
@@ -514,7 +515,7 @@ for (i in enumerate(exp2_radius)) {
     add_column(exp2_covariates100[, 1], .before = "exp2_DGP100") %>% 
     rename(DGP = exp2_DGP100)
   
-  # Average MSE of either Ridge / Lasso for given cluster radius but with different number of draws 
+  # Average MSE of Ridge for given cluster radius but with different number of draws 
   exp2_RL50 <- RL_mse(RL = 0, data = exp2_data50, folds = 10)
   exp2_RL60 <- RL_mse(RL = 0, data = exp2_data60, folds = 10)
   exp2_RL70 <- RL_mse(RL = 0, data = exp2_data70, folds = 10)
@@ -525,7 +526,7 @@ for (i in enumerate(exp2_radius)) {
   # Combine average MSE
   exp2_RL_mse <- as.tibble(rbind(exp2_RL50, exp2_RL60, exp2_RL70, exp2_RL80, exp2_RL90, exp2_RL100))
   
-  # 200 MSEs of either Ridge or Lasso for given cluster radius but with different number of draws
+  # 200 MSEs of Ridge for given cluster radius but with different number of draws
   exp2_RL50_mses <- RL_mse(RL = 0, data = exp2_data50, folds = 10, output = 0, radius = 1) %>% 
     select(-cluster_radius) %>% 
     mutate(obs = 50)
@@ -565,6 +566,97 @@ for (i in enumerate(exp2_radius)) {
   print(index)
   
 }
+
+# Experiment 2 loop for Lasso
+for (i in enumerate(exp2_radius)) {
+  
+  index <- i[[1]]; beta <- i[[2]]
+  
+  # DGP - given cluster size but different number of draws 
+  exp2_DGP50 <- as.matrix(exp2_covariates50[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  exp2_DGP60 <- as.matrix(exp2_covariates60[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  exp2_DGP70 <- as.matrix(exp2_covariates70[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  exp2_DGP80 <- as.matrix(exp2_covariates80[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  exp2_DGP90 <- as.matrix(exp2_covariates90[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  exp2_DGP100 <- as.matrix(exp2_covariates100[, -1]) %*% beta + rnorm(1, mean = 0, sd = 1)
+  
+  # Combine Y and X
+  exp2_data50 <- as.tibble(cbind(exp2_DGP50, exp2_covariates50[, -1])) %>% 
+    add_column(exp2_covariates50[, 1], .before = "exp2_DGP50") %>% 
+    rename(DGP = exp2_DGP50)
+  
+  exp2_data60 <- as.tibble(cbind(exp2_DGP60, exp2_covariates60[, -1])) %>% 
+    add_column(exp2_covariates60[, 1], .before = "exp2_DGP60") %>% 
+    rename(DGP = exp2_DGP60)   
+  
+  exp2_data70 <- as.tibble(cbind(exp2_DGP70, exp2_covariates70[, -1])) %>% 
+    add_column(exp2_covariates70[, 1], .before = "exp2_DGP70") %>% 
+    rename(DGP = exp2_DGP70)
+  
+  exp2_data80 <- as.tibble(cbind(exp2_DGP80, exp2_covariates80[, -1])) %>% 
+    add_column(exp2_covariates80[, 1], .before = "exp2_DGP80") %>% 
+    rename(DGP = exp2_DGP80)
+  
+  exp2_data90 <- as.tibble(cbind(exp2_DGP90, exp2_covariates90[, -1])) %>% 
+    add_column(exp2_covariates90[, 1], .before = "exp2_DGP90") %>% 
+    rename(DGP = exp2_DGP90)
+  
+  exp2_data100 <- as.tibble(cbind(exp2_DGP100, exp2_covariates100[, -1])) %>% 
+    add_column(exp2_covariates100[, 1], .before = "exp2_DGP100") %>% 
+    rename(DGP = exp2_DGP100)
+  
+  # Average MSE of Lasso for given cluster radius but with different number of draws 
+  exp2_RL50 <- RL_mse(RL = 1, data = exp2_data50, folds = 10, split = 0.15)
+  exp2_RL60 <- RL_mse(RL = 1, data = exp2_data60, folds = 10, split = 0.15)
+  exp2_RL70 <- RL_mse(RL = 1, data = exp2_data70, folds = 10, split = 0.15)
+  exp2_RL80 <- RL_mse(RL = 1, data = exp2_data80, folds = 10, split = 0.15)
+  exp2_RL90 <- RL_mse(RL = 1, data = exp2_data90, folds = 10, split = 0.15)
+  exp2_RL100 <- RL_mse(RL = 1, data = exp2_data100, folds = 10, split = 0.15)
+  
+  # Combine average MSE
+  exp2_RL_mse <- as.tibble(rbind(exp2_RL50, exp2_RL60, exp2_RL70, exp2_RL80, exp2_RL90, exp2_RL100))
+  
+  # 200 MSEs of Lasso for given cluster radius but with different number of draws
+  exp2_RL50_mses <- RL_mse(RL = 1, data = exp2_data50, folds = 10, output = 0, radius = 1, split = 0.15) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 50)
+  exp2_RL60_mses <- RL_mse(RL = 1, data = exp2_data60, folds = 10, output = 0, radius = 1, split = 0.15) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 60)
+  exp2_RL70_mses <- RL_mse(RL = 1, data = exp2_data70, folds = 10, output = 0, radius = 1, split = 0.15) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 70)
+  exp2_RL80_mses <- RL_mse(RL = 1, data = exp2_data80, folds = 10, output = 0, radius = 1, split = 0.15) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 80)
+  exp2_RL90_mses <- RL_mse(RL = 1, data = exp2_data90, folds = 10, output = 0, radius = 1, split = 0.15) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 90)
+  exp2_RL100_mses <- RL_mse(RL = 1, data = exp2_data100, folds = 10, output = 0, radius = 1, split = 0.15) %>% 
+    select(-cluster_radius) %>% 
+    mutate(obs = 100)
+  
+  # Combine 200 MSEs
+  exp2_ridge_data_figure4 <- rbind(exp2_RL50_mses, exp2_RL60_mses, exp2_RL70_mses, exp2_RL80_mses, exp2_RL90_mses, exp2_RL100_mses) %>% 
+    arrange(iteration, obs)
+  
+  # Figure 4 
+  figure4_temp <- ggplot(exp2_ridge_data_figure4) +
+    geom_line(aes(obs, s0, color = as.factor(iteration)), alpha = 0.1, size = 0.01) +
+    scale_color_discrete(name = "Date") + 
+    scale_y_continuous(limits = c(0, 80)) + # Removes extreme observations above 80 MSE
+    theme_article() + 
+    theme(legend.position = "none") + # Removes legend altogether 
+    scale_color_manual(values = rep("#F8766D", 201)) + 
+    labs(x = "Observations", y = "MSE") +
+    geom_line(data = exp2_RL_mse, aes(y = s0, x = c(50, 60, 70, 80, 90, 100), col = "Ridge"), size = 1) # Add average MSE 
+  
+  figure4[[index+4]] <- figure4_temp # + 4 so as to make sure they are stored after the 4 ridge plots
+  
+  print(index)
+  
+}
+
 
 # Figure 4
 figure4_stacked <- gridExtra::grid.arrange(figure4[[1]], figure4[[2]], figure4[[3]], figure4[[4]], ncol = 2)
