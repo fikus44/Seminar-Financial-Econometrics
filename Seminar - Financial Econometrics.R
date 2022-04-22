@@ -567,6 +567,11 @@ for (i in enumerate(exp2_radius)) {
   
 }
 
+# Figure 4
+figure4_stacked <- gridExtra::grid.arrange(figure4[[1]], figure4[[2]], figure4[[3]], figure4[[4]], ncol = 2)
+ggsave("figure4.pdf", plot=figure4_stacked, width = 20, height = 18, units= "cm", dpi = 300)
+
+
 # Experiment 2 loop for Lasso
 for (i in enumerate(exp2_radius)) {
   
@@ -657,13 +662,11 @@ for (i in enumerate(exp2_radius)) {
   
 }
 
+# Figure 5
+figure5_stacked <- gridExtra::grid.arrange(figure4[[5]], figure4[[6]], figure4[[7]], figure4[[8]], ncol = 2)
+ggsave("figure5.pdf", plot=figure5_stacked, width = 20, height = 18, units= "cm", dpi = 300)
 
-# Figure 4
-figure4_stacked <- gridExtra::grid.arrange(figure4[[1]], figure4[[2]], figure4[[3]], figure4[[4]], ncol = 2)
-ggsave("figure4.pdf", plot=figure4_stacked, width = 20, height = 18, units= "cm", dpi = 300)
-
-
- 
+### 6. Experiment 3 ------------------------------------------------------------
 
 
 
