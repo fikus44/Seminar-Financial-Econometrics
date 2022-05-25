@@ -6,7 +6,7 @@
 #                                                #
 #  The following script produces all output      #
 #  used in the paper. On my computer, the        #
-#  entire script takes approx. 15 minute to run. #
+#  entire script takes approx. 45 minute to run. #
 #                                                #
 ##################################################
 
@@ -467,6 +467,7 @@ table3 <- table_theme(t(RL_MSE), colnames = table3_names, caption = "Experiment 
 
 # Initiate empty list for figure 4
 figure4 <- list()
+table4_data <- as_tibble(data.frame(matrix(nrow = 0, ncol = 6 )))
 
 # Covariates for experiment 2 
 exp2_covariates50 <- simCovariates(d = 50, var = 40, ite = 200) 
@@ -475,6 +476,9 @@ exp2_covariates70 <- simCovariates(d = 70, var = 40, ite = 200)
 exp2_covariates80 <- simCovariates(d = 80, var = 40, ite = 200) 
 exp2_covariates90 <- simCovariates(d = 90, var = 40, ite = 200)
 exp2_covariates100 <- simCovariates(d = 100, var = 40, ite = 200)
+
+# Experiment 2 list of MSEs for density plot later 
+figure8_data <- list() 
 
 # Experiment 2 loop for Ridge
 exp2_radius <- list(beta1, beta3, beta5, beta7)
@@ -526,6 +530,9 @@ for (i in enumerate(exp2_radius)) {
   # Combine average MSE
   exp2_RL_mse <- as.tibble(rbind(exp2_RL50, exp2_RL60, exp2_RL70, exp2_RL80, exp2_RL90, exp2_RL100))
   
+  # Bind in tibble for table 4
+  table4_data <- rbind(table4_data, t(exp2_RL_mse))
+  
   # 200 MSEs of Ridge for given cluster radius but with different number of draws
   exp2_RL50_mses <- RL_mse(RL = 0, data = exp2_data50, folds = 10, output = 0, radius = 1) %>% 
     select(-cluster_radius) %>% 
@@ -545,6 +552,10 @@ for (i in enumerate(exp2_radius)) {
   exp2_RL100_mses <- RL_mse(RL = 0, data = exp2_data100, folds = 10, output = 0, radius = 1) %>% 
     select(-cluster_radius) %>% 
     mutate(obs = 100)
+  
+  # Append MSEs to list so as to make figure 8 (density plot) later
+  list_temp <- list(exp2_RL50_mses, exp2_RL60_mses, exp2_RL70_mses, exp2_RL80_mses, exp2_RL90_mses, exp2_RL100_mses)
+  figure8_data[[index]] <- list_temp
   
   # Combine 200 MSEs
   exp2_ridge_data_figure4 <- rbind(exp2_RL50_mses, exp2_RL60_mses, exp2_RL70_mses, exp2_RL80_mses, exp2_RL90_mses, exp2_RL100_mses) %>% 
@@ -571,6 +582,17 @@ for (i in enumerate(exp2_radius)) {
 figure4_stacked <- gridExtra::grid.arrange(figure4[[1]], figure4[[2]], figure4[[3]], figure4[[4]], ncol = 2)
 ggsave("figure4.pdf", plot=figure4_stacked, width = 20, height = 18, units= "cm", dpi = 300)
 
+# Table 4 
+table4_names <- c("50", "60", "70", "80", "90", "100")
+table4 <- table_theme(table4_data %>% `rownames<-`(c("1", "3", "5", "7")), colnames = table4_names, 
+                            caption = "Experiment 2 output: Ridge MSE", escape = TRUE) %>% 
+  kable_styling(latex_options = "scale_down")
+
+# Holder for table5 data 
+table5_data <- as_tibble(data.frame(matrix(nrow = 0, ncol = 6 )))
+
+# Experiment 2 list of MSEs for density plot later 
+figure9_data <- list() 
 
 # Experiment 2 loop for Lasso
 for (i in enumerate(exp2_radius)) {
@@ -621,6 +643,9 @@ for (i in enumerate(exp2_radius)) {
   # Combine average MSE
   exp2_RL_mse <- as.tibble(rbind(exp2_RL50, exp2_RL60, exp2_RL70, exp2_RL80, exp2_RL90, exp2_RL100))
   
+  # Bind in tibble for table 4
+  table5_data <- rbind(table5_data, t(exp2_RL_mse))
+  
   # 200 MSEs of Lasso for given cluster radius but with different number of draws
   exp2_RL50_mses <- RL_mse(RL = 1, data = exp2_data50, folds = 10, output = 0, radius = 1, split = 0.15) %>% 
     select(-cluster_radius) %>% 
@@ -640,6 +665,10 @@ for (i in enumerate(exp2_radius)) {
   exp2_RL100_mses <- RL_mse(RL = 1, data = exp2_data100, folds = 10, output = 0, radius = 1, split = 0.15) %>% 
     select(-cluster_radius) %>% 
     mutate(obs = 100)
+  
+  # Append MSEs to list so as to make figure 8 (density plot) later
+  list_temp <- list(exp2_RL50_mses, exp2_RL60_mses, exp2_RL70_mses, exp2_RL80_mses, exp2_RL90_mses, exp2_RL100_mses)
+  figure9_data[[index]] <- list_temp
   
   # Combine 200 MSEs
   exp2_ridge_data_figure4 <- rbind(exp2_RL50_mses, exp2_RL60_mses, exp2_RL70_mses, exp2_RL80_mses, exp2_RL90_mses, exp2_RL100_mses) %>% 
@@ -666,15 +695,208 @@ for (i in enumerate(exp2_radius)) {
 figure5_stacked <- gridExtra::grid.arrange(figure4[[5]], figure4[[6]], figure4[[7]], figure4[[8]], ncol = 2)
 ggsave("figure5.pdf", plot=figure5_stacked, width = 20, height = 18, units= "cm", dpi = 300)
 
-### 6. Experiment 3 ------------------------------------------------------------
+# Table 5
+table5_names <- c("50", "60", "70", "80", "90", "100")
+table5 <- table_theme(table5_data %>% `rownames<-`(c("1", "3", "5", "7")), colnames = table5_names, 
+                      caption = "Experiment 2 output: Lasso MSE", escape = TRUE) %>% 
+  kable_styling(latex_options = "scale_down")
+
+
+### 6. Distribution figures of MSEs of experiment 1 and 2 ----------------------
+
+# Experiment 1 - Density plots for ridge and lasso (figure 6 and 7) 
+figure6 <- list()
+figure6_data <- list(ridge1_mses, ridge2_mses, ridge3_mses, ridge4_mses, ridge5_mses, ridge6_mses, ridge7_mses)
+
+for (i in enumerate(figure6_data)) {
+  
+  index <- i[[1]]; data <- i[[2]]
+  
+  figure6_temp <- ggplot(data, aes(x = s0, fill = variable)) +
+    geom_density(alpha = .2, fill = "#00BFC4") + 
+    labs(x = "Values", y = "Density") +
+    theme_article()
+  
+  figure6[[index]] <- figure6_temp
+  
+}
+
+layout <- rbind(c(1,1,2,2), c(3,3,4,4), c(5,5,6,6), c(8,7,7,8))
+figure6_stacked <- gridExtra::grid.arrange(figure6[[1]], figure6[[2]], figure6[[3]], figure6[[4]], figure6[[5]], figure6[[6]], figure6[[7]], ncol = 2, nrow = 4, layout_matrix = layout)
+ggsave("figure6.pdf", plot=figure6_stacked, width = 25, height = 45, units= "cm", dpi = 300)
+
+figure7 <- list()
+figure7_data <- list(lasso1_mses, lasso2_mses, lasso3_mses, lasso4_mses, lasso5_mses, lasso6_mses, lasso7_mses)
+
+for (i in enumerate(figure7_data)) {
+  
+  index <- i[[1]]; data <- i[[2]]
+  
+  figure7_temp <- ggplot(data, aes(x = s0, fill = variable)) +
+    geom_density(alpha = .2, fill = "#FF6666") + 
+    labs(x = "Values", y = "Density") +
+    theme_article()
+  
+  figure7[[index]] <- figure7_temp
+  
+}
+
+layout <- rbind(c(1,1,2,2), c(3,3,4,4), c(5,5,6,6), c(8,7,7,8))
+figure7_stacked <- gridExtra::grid.arrange(figure7[[1]], figure7[[2]], figure7[[3]], figure7[[4]], figure7[[5]], figure7[[6]], figure7[[7]], ncol = 2, nrow = 4, layout_matrix = layout)
+ggsave("figure7.pdf", plot=figure7_stacked, width = 25, height = 45, units= "cm", dpi = 300)
+
+# Table of Standard Deviations for ridge and lasso for experiment 1 
+# Table 4 - Compile data in single tibble
+colnames <- c("r1", "r2", "r3", "r4", "r5", "r6", "r7")
+
+ridge_data_sd <- cbind(ridge1_mses[, 1], ridge2_mses[, 1], ridge3_mses[, 1], ridge4_mses[, 1], ridge5_mses[, 1], ridge6_mses[, 1], ridge7_mses[, 1]) %>% 
+  `colnames<-`(colnames) %>% 
+  apply(MARGIN = 2, FUN = sd)
+lasso_data_sd <- cbind(lasso1_mses[, 1], lasso2_mses[, 1], lasso3_mses[, 1], lasso4_mses[, 1], lasso5_mses[, 1], lasso6_mses[, 1], lasso7_mses[, 1]) %>% 
+  `colnames<-`(colnames) %>% 
+  apply(MARGIN = 2, FUN = sd)
+
+table4_volatility_data <- as.tibble(cbind(ridge_data_sd, lasso_data_sd))
+
+table4_names <- c("1", "2", "3", "4", "5", "6", "7" )
+table4 <- table_theme(t(table4_volatility_data), colnames = table4_names, caption = "Experiment 1: Std. Dev. versus coefficent cluster radius'", escape = TRUE) %>% 
+  kable_styling(latex_options = "scale_down")
+
+# Experiment 2 - Density plots for ridge and lasso for each complexity 1, 3, 5, and 7 
+
+# Data for density plots of ridge and lasso from experiment 2 loop 
+figure8_data
+figure9_data 
+
+# First 6 entries are for cluster radius 1 with observations 50, 60, 70, 80, 90, and 100. The next 6 are for cluster radius 2 with observations... (ridge) 
+figure8 <- list()
+
+index <- 0 
+for (t in 1:length(figure8_data)){
+  
+  figure_ite <- figure8_data[[t]]
+  
+  for (i in enumerate(figure_ite)) {
+    
+    index <- index + 1; data <- i[[2]]
+    
+    figure8_temp <- ggplot(data, aes(x = s0, fill = variable)) +
+      geom_density(alpha = .2, fill = "#00BFC4") + 
+      labs(x = "Values", y = "Density") +
+      theme_article()
+    
+    figure8[[index]] <- figure8_temp
+
+  }
+  
+}
+
+layout_figure8 <- rbind(c(1,2,3), c(4,5,6))
+figure8A_stacked <- gridExtra::grid.arrange(figure8[[1]], figure8[[2]], figure8[[3]], figure8[[4]], figure8[[5]], figure8[[6]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+ggsave("figure8A.pdf", plot=figure8A_stacked, width = 35, height = 21, units= "cm", dpi = 300)
+
+figure8B_stacked <- gridExtra::grid.arrange(figure8[[7]], figure8[[8]], figure8[[9]], figure8[[10]], figure8[[11]], figure8[[12]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+ggsave("figure8B.pdf", plot=figure8B_stacked, width = 35, height = 21, units= "cm", dpi = 300)
+
+figure8C_stacked <- gridExtra::grid.arrange(figure8[[13]], figure8[[14]], figure8[[15]], figure8[[16]], figure8[[17]], figure8[[18]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+ggsave("figure8C.pdf", plot=figure8C_stacked, width = 35, height = 21, units= "cm", dpi = 300)
+
+figure8D_stacked <- gridExtra::grid.arrange(figure8[[19]], figure8[[20]], figure8[[21]], figure8[[22]], figure8[[23]], figure8[[24]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+ggsave("figure8D.pdf", plot=figure8D_stacked, width = 35, height = 21, units= "cm", dpi = 300)
+
+# Lasso Density plots experiment 2 
+figure9 <- list()
+
+index <- 0 
+for (t in 1:length(figure9_data)){
+  
+  figure_ite <- figure9_data[[t]]
+  
+  for (i in enumerate(figure_ite)) {
+    
+    index <- index + 1; data <- i[[2]]
+    
+    figure9_temp <- ggplot(data, aes(x = s0, fill = variable)) +
+      geom_density(alpha = .2, fill = "#FF6666") + 
+      labs(x = "Values", y = "Density") +
+      theme_article()
+    
+    figure9[[index]] <- figure9_temp
+    
+  }
+  
+}
+
+layout_figure9 <- rbind(c(1,2,3), c(4,5,6))
+figure9A_stacked <- gridExtra::grid.arrange(figure9[[1]], figure9[[2]], figure9[[3]], figure9[[4]], figure9[[5]], figure9[[6]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+ggsave("figure9A.pdf", plot=figure9A_stacked, width = 35, height = 21, units= "cm", dpi = 300)
+
+figure9B_stacked <- gridExtra::grid.arrange(figure9[[7]], figure9[[8]], figure9[[9]], figure9[[10]], figure9[[11]], figure9[[12]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+ggsave("figure9B.pdf", plot=figure9B_stacked, width = 35, height = 21, units= "cm", dpi = 300)
+
+figure9C_stacked <- gridExtra::grid.arrange(figure9[[13]], figure9[[14]], figure9[[15]], figure9[[16]], figure9[[17]], figure9[[18]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+ggsave("figure9C.pdf", plot=figure9C_stacked, width = 35, height = 21, units= "cm", dpi = 300)
+
+figure9D_stacked <- gridExtra::grid.arrange(figure9[[19]], figure9[[20]], figure9[[21]], figure9[[22]], figure9[[23]], figure9[[24]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+ggsave("figure9D.pdf", plot=figure9D_stacked, width = 35, height = 21, units= "cm", dpi = 300)
+
+
+
+ggplot(ridge1_mses, aes(x = s0)) +
+  geom_histogram(aes(y = ..density..), colour = "black", fill = "white",  bins = 40) +
+  geom_density(alpha = .2, fill = "#FF6666") + 
+  labs(x = "Values", y = "Density")
+
+ggplot(ridge1_mses, aes(x = s0, fill = variable)) +
+  geom_density(alpha = .2, fill = "#00BFC4") + 
+  labs(x = "Values", y = "Density") +
+  theme_article()
+
+ggplot(lasso6_mses, aes(x = s0, fill = variable)) +
+  geom_density(alpha = .2, fill = "#00BFC4") + 
+  theme_article()
+
+# Saml data til at lave density plots
+data_test <- cbind(ridge6_mses[, 1], lasso6_mses[, 1]) %>% 
+  `colnames<-`(c("ridge_mse", "lasso_mse")) %>% 
+  stack(c(ridge_mse, lasso_mse))
+
+# Farvekombination 1 
+ggplot(data_test, aes(x = values, fill = ind, color = ind)) +
+  geom_density(alpha = .4) + 
+  scale_color_manual(values = c("#00BFC4", "#FF6666")) + 
+  scale_fill_manual(values = c("white", "white")) + 
+  theme_article() #+ 
+  #theme(legend.position = "none") # removes ledger altogether has to come after theme_article()
+
+# Farvekomvinaiton 2 
+ggplot(data_test, aes(x = values, fill = ind)) +
+  geom_density(alpha = .4) + 
+  scale_fill_manual(values = c("#FF6666", "#00BFC4")) + 
+  theme_article() #+ 
+#theme(legend.position = "none") # removes ledger altogether has to come after theme_article()
 
 
 
 
 
+# Fra hvad jeg har set så giver det kun mening at plotte density funktionerne for ridge og lasso i samme plot for cluster radius 4 og op. PDF for lasso er simpelthen så lille at det nærmest
+# ikke giver mening at plotte den... - de skal hvertfald plottes i to separate plots hvis jeg vælger at gøre det 
 
-# Jeg trækker nu covariatres, herefter krøer vi bare det hele igen; lav DGP og regressioner - men kun for cluster = 1,3,5,7. 
-# Jeg får da MSE og MSES for ridge og lasso jeg skal 
+# Jeg kan lave et tabel med std. dev eller udvide det table der er med means. På den måde kan jeg også tale til volatiliteten. 
+
+
+
+
+### 7. Application: Empirical Asset Pricing ------------------------------------
+
+
+# Jeg skal bruge det jeg har fra MA2 i AEF 
+
+
+# Timer finished
+end_time <- Sys.time()
+print(paste("Total time:", end_time - start_time))
 
 # Vi ser i det første eksperiment på hvordan ridge og lasso predicter igennem cluster radius. Men vi har ret få observationer; kun lidt flere end
 # covariates - typisk vil vi have bare lidt flere og det kunne derfor være interessant at se hvor mange observationer vi egentlig skal bruge før
@@ -689,9 +911,6 @@ ggsave("figure5.pdf", plot=figure5_stacked, width = 20, height = 18, units= "cm"
 # computer så MSE gennem antal observationer
 
 
-# det kunne måske være cool i figuren at have en linje for hver iteration og så kan average være ekstra fed! Jeg kan gøre det samme i 
-# eksperiment 2 her bliver det så bare med MSE på 2. aksen og antal obs. på 1 aksen i stedet for cluster radius.
-
 
 # Ridge & Lasso
 ridgeeq <- glmnet::glmnet(y = as.matrix(train_data$DGP), x = as.matrix(train_data[, 3:42]), alpha = 0, lambda = 1)
@@ -705,12 +924,6 @@ covariates_test <- matrix(3:5, nrow = 3)
 
 y <- data_test %*% covariates_test + 1 # +1 er error term holder
 
-
-
-# 1. Vi simulerer covariates
-# 2. Vi laver coefficient cluster - draw med replacement sætter prob op så der er 2 * rc - 1 i hvert cluster, og hvis de trækker du ik nul --> giv den en værdi omkring center + et stochastic shock
-# 3. Vi simulerer vores DGP
-# 4. Vi har nu data --> vi laver Ridge, lasso, stepwise forward + CV og genererer MSE
 
 
 
