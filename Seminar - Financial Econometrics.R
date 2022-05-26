@@ -781,16 +781,20 @@ for (t in 1:length(figure8_data)){
 }
 
 layout_figure8 <- rbind(c(1,2,3), c(4,5,6))
-figure8A_stacked <- gridExtra::grid.arrange(figure8[[1]], figure8[[2]], figure8[[3]], figure8[[4]], figure8[[5]], figure8[[6]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+figure8A_stacked <- gridExtra::grid.arrange(figure8[[1]], figure8[[2]], figure8[[3]], figure8[[4]], figure8[[5]], figure8[[6]], 
+                                            ncol = 3, nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure8A.pdf", plot=figure8A_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
-figure8B_stacked <- gridExtra::grid.arrange(figure8[[7]], figure8[[8]], figure8[[9]], figure8[[10]], figure8[[11]], figure8[[12]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+figure8B_stacked <- gridExtra::grid.arrange(figure8[[7]], figure8[[8]], figure8[[9]], figure8[[10]], figure8[[11]], figure8[[12]], 
+                                            ncol = 3, nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure8B.pdf", plot=figure8B_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
-figure8C_stacked <- gridExtra::grid.arrange(figure8[[13]], figure8[[14]], figure8[[15]], figure8[[16]], figure8[[17]], figure8[[18]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+figure8C_stacked <- gridExtra::grid.arrange(figure8[[13]], figure8[[14]], figure8[[15]], figure8[[16]], figure8[[17]], figure8[[18]], 
+                                            ncol = 3, nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure8C.pdf", plot=figure8C_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
-figure8D_stacked <- gridExtra::grid.arrange(figure8[[19]], figure8[[20]], figure8[[21]], figure8[[22]], figure8[[23]], figure8[[24]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+figure8D_stacked <- gridExtra::grid.arrange(figure8[[19]], figure8[[20]], figure8[[21]], figure8[[22]], figure8[[23]], figure8[[24]], 
+                                            ncol = 3, nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure8D.pdf", plot=figure8D_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
 # Lasso Density plots experiment 2 
@@ -821,16 +825,16 @@ figure9A_stacked <- gridExtra::grid.arrange(figure9[[1]], figure9[[2]], figure9[
                                             ncol = 3, nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure9A.pdf", plot=figure9A_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
-figure9B_stacked <- gridExtra::grid.arrange(figure9[[7]], figure9[[8]], figure9[[9]], figure9[[10]], figure9[[11]], figure9[[12]], ncol = 3, 
-                                            nrow = 2, layout_matrix = layout_figure8)
+figure9B_stacked <- gridExtra::grid.arrange(figure9[[7]], figure9[[8]], figure9[[9]], figure9[[10]], figure9[[11]], figure9[[12]], 
+                                            ncol = 3, nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure9B.pdf", plot=figure9B_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
-figure9C_stacked <- gridExtra::grid.arrange(figure9[[13]], figure9[[14]], figure9[[15]], figure9[[16]], figure9[[17]], figure9[[18]], ncol = 3, 
-                                            nrow = 2, layout_matrix = layout_figure8)
+figure9C_stacked <- gridExtra::grid.arrange(figure9[[13]], figure9[[14]], figure9[[15]], figure9[[16]], figure9[[17]], figure9[[18]], 
+                                            ncol = 3, nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure9C.pdf", plot=figure9C_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
-figure9D_stacked <- gridExtra::grid.arrange(figure9[[19]], figure9[[20]], figure9[[21]], figure9[[22]], figure9[[23]], figure9[[24]], ncol = 3, 
-                                            nrow = 2, layout_matrix = layout_figure8)
+figure9D_stacked <- gridExtra::grid.arrange(figure9[[19]], figure9[[20]], figure9[[21]], figure9[[22]], figure9[[23]], figure9[[24]], 
+                                            ncol = 3, nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure9D.pdf", plot=figure9D_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
 # RIDGE: Tables of Standard deviation of ridge and lasso regression in experiment 2 
