@@ -39,12 +39,6 @@ start_time <- Sys.time()
 
 ### 1. Simulate Covariates -----------------------------------------------------
 
-# Hængepartier / Spørgsmål til del 1:
-#   * Hvordan skal variansen defienres for vores covariates, lige nu med log og runif()?
-#   * Skal alle covaraites være trukket fra normalfordelingen?
-#   * Hvorfor tjekker vi om corr-matrix er positiv definint?
-#   * Spørg til mødet om min ide med at generere x'er er god; det med at give dem en korrelation + alle er normalfordelte
-
 # Simulation Setup 
 draws = 50
 variables = 40
@@ -249,10 +243,6 @@ table2 <- table_theme(map_df(.x = beta,
 
 
 ### 3. Data Generating Process -------------------------------------------------
-
-# Hængepartier / Spørgsmål til del 3:
-#   * jeg bør måske sætte seed her, så error term bliver ens? 
-#   * Jeg kan formentlig også skrive det op på en lidt mere elegant måde? 
 
 # DGP (number corresponds to cluster radius) - there is most likely a neater (more elegant) way to code this up
 DGP1 <- as.matrix(covariates[, -1]) %*% beta1 + rnorm(1, mean = 0, sd = 1)
@@ -462,8 +452,6 @@ table3 <- table_theme(t(RL_MSE), colnames = table3_names, caption = "Experiment 
   kable_styling(latex_options = "scale_down")
   
 ### 5. Experiment 2 ------------------------------------------------------------
-
-
 
 # Initiate empty list for figure 4
 figure4 <- list()
@@ -722,7 +710,8 @@ for (i in enumerate(figure6_data)) {
 }
 
 layout <- rbind(c(1,1,2,2), c(3,3,4,4), c(5,5,6,6), c(8,7,7,8))
-figure6_stacked <- gridExtra::grid.arrange(figure6[[1]], figure6[[2]], figure6[[3]], figure6[[4]], figure6[[5]], figure6[[6]], figure6[[7]], ncol = 2, nrow = 4, layout_matrix = layout)
+figure6_stacked <- gridExtra::grid.arrange(figure6[[1]], figure6[[2]], figure6[[3]], figure6[[4]], figure6[[5]], figure6[[6]], figure6[[7]], 
+                                           ncol = 2, nrow = 4, layout_matrix = layout)
 ggsave("figure6.pdf", plot=figure6_stacked, width = 25, height = 45, units= "cm", dpi = 300)
 
 figure7 <- list()
@@ -742,11 +731,12 @@ for (i in enumerate(figure7_data)) {
 }
 
 layout <- rbind(c(1,1,2,2), c(3,3,4,4), c(5,5,6,6), c(8,7,7,8))
-figure7_stacked <- gridExtra::grid.arrange(figure7[[1]], figure7[[2]], figure7[[3]], figure7[[4]], figure7[[5]], figure7[[6]], figure7[[7]], ncol = 2, nrow = 4, layout_matrix = layout)
+figure7_stacked <- gridExtra::grid.arrange(figure7[[1]], figure7[[2]], figure7[[3]], figure7[[4]], figure7[[5]], figure7[[6]], figure7[[7]], 
+                                           ncol = 2, nrow = 4, layout_matrix = layout)
 ggsave("figure7.pdf", plot=figure7_stacked, width = 25, height = 45, units= "cm", dpi = 300)
 
 # Table of Standard Deviations for ridge and lasso for experiment 1 
-# Table 4 - Compile data in single tibble
+# Table 6 - Compile data in single tibble
 colnames <- c("r1", "r2", "r3", "r4", "r5", "r6", "r7")
 
 ridge_data_sd <- cbind(ridge1_mses[, 1], ridge2_mses[, 1], ridge3_mses[, 1], ridge4_mses[, 1], ridge5_mses[, 1], ridge6_mses[, 1], ridge7_mses[, 1]) %>% 
@@ -756,14 +746,13 @@ lasso_data_sd <- cbind(lasso1_mses[, 1], lasso2_mses[, 1], lasso3_mses[, 1], las
   `colnames<-`(colnames) %>% 
   apply(MARGIN = 2, FUN = sd)
 
-table4_volatility_data <- as.tibble(cbind(ridge_data_sd, lasso_data_sd))
+table6_volatility_data <- as.tibble(cbind(ridge_data_sd, lasso_data_sd))
 
-table4_names <- c("1", "2", "3", "4", "5", "6", "7" )
-table4 <- table_theme(t(table4_volatility_data), colnames = table4_names, caption = "Experiment 1: Std. Dev. versus coefficent cluster radius'", escape = TRUE) %>% 
+table6_names <- c("1", "2", "3", "4", "5", "6", "7" )
+table6 <- table_theme(t(table6_volatility_data), colnames = table4_names, caption = "Experiment 1: Std. Dev. versus coefficent cluster radius'", escape = TRUE) %>% 
   kable_styling(latex_options = "scale_down")
 
 # Experiment 2 - Density plots for ridge and lasso for each complexity 1, 3, 5, and 7 
-
 # Data for density plots of ridge and lasso from experiment 2 loop 
 figure8_data
 figure9_data 
@@ -840,7 +829,98 @@ ggsave("figure9C.pdf", plot=figure9C_stacked, width = 35, height = 21, units= "c
 figure9D_stacked <- gridExtra::grid.arrange(figure9[[19]], figure9[[20]], figure9[[21]], figure9[[22]], figure9[[23]], figure9[[24]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure9D.pdf", plot=figure9D_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
+# RIDGE: Tables of Standard deviation of ridge and lasso regression in experiment 2 
+table7_temp1 <- data.frame(figure8_data[[1]][[1]][, 1], figure8_data[[1]][[2]][, 1], figure8_data[[1]][[3]][, 1], 
+                           figure8_data[[1]][[4]][, 1], figure8_data[[1]][[5]][, 1], figure8_data[[1]][[6]][, 1]) %>% 
+  map(sd) %>% map(round, digits = 2)
+table7_temp2 <- data.frame(figure8_data[[2]][[1]][, 1], figure8_data[[2]][[2]][, 1], figure8_data[[2]][[3]][, 1], 
+                           figure8_data[[2]][[4]][, 1], figure8_data[[2]][[5]][, 1], figure8_data[[2]][[6]][, 1]) %>% 
+  map(sd) %>% map(round, digits = 2)
+table7_temp3 <- data.frame(figure8_data[[3]][[1]][, 1], figure8_data[[3]][[2]][, 1], figure8_data[[3]][[3]][, 1], 
+                           figure8_data[[3]][[4]][, 1], figure8_data[[3]][[5]][, 1], figure8_data[[3]][[6]][, 1]) %>% 
+  map(sd) %>% map(round, digits = 2)
+table7_temp4 <- data.frame(figure8_data[[4]][[1]][, 1], figure8_data[[4]][[2]][, 1], figure8_data[[4]][[3]][, 1], 
+                           figure8_data[[4]][[4]][, 1], figure8_data[[4]][[5]][, 1], figure8_data[[4]][[6]][, 1]) %>% 
+  map(sd) %>% map(round, digits = 2)
 
+# Sd of given cluster radius (rows) and observations (columns) for the ridge regression in experiment 2 
+table7_data <- rbind(t(table7_temp1), t(table7_temp2), t(table7_temp3), t(table7_temp4))
+table7_names <- c("50", "60", "70", "80", "90", "100")
+table7 <- table_theme(table7_data %>% `row.names<-`(c("1", "3", "5", "7")), colnames = table7_names,
+                      caption = "Experiment 2: Std. Dev. for given radis and number of draws", escape = TRUE) %>% 
+  kable_styling(latex_options = "scale_down")
+
+# LASSO: Tables of Standard deviation of ridge and lasso regression in experiment 2 
+table8_temp1 <- data.frame(figure9_data[[1]][[1]][, 1], figure9_data[[1]][[2]][, 1], figure9_data[[1]][[3]][, 1], 
+                           figure9_data[[1]][[4]][, 1], figure9_data[[1]][[5]][, 1], figure9_data[[1]][[6]][, 1]) %>% 
+  map(sd) %>% map(round, digits = 2)
+table8_temp2 <- data.frame(figure9_data[[2]][[1]][, 1], figure9_data[[2]][[2]][, 1], figure9_data[[2]][[3]][, 1], 
+                           figure9_data[[2]][[4]][, 1], figure9_data[[2]][[5]][, 1], figure9_data[[2]][[6]][, 1]) %>% 
+  map(sd) %>% map(round, digits = 2)
+table8_temp3 <- data.frame(figure9_data[[3]][[1]][, 1], figure9_data[[3]][[2]][, 1], figure9_data[[3]][[3]][, 1], 
+                           figure9_data[[3]][[4]][, 1], figure9_data[[3]][[5]][, 1], figure9_data[[3]][[6]][, 1]) %>% 
+  map(sd) %>% map(round, digits = 2)
+table8_temp4 <- data.frame(figure9_data[[4]][[1]][, 1], figure9_data[[4]][[2]][, 1], figure9_data[[4]][[3]][, 1], 
+                           figure9_data[[4]][[4]][, 1], figure9_data[[4]][[5]][, 1], figure9_data[[4]][[6]][, 1]) %>% 
+  map(sd) %>% map(round, digits = 2)
+
+# Sd of given cluster radius (rows) and observations (columns) for the ridge regression in experiment 2 
+table8_data <- rbind(t(table8_temp1), t(table8_temp2), t(table8_temp3), t(table8_temp4))
+table8_names <- c("50", "60", "70", "80", "90", "100")
+table8 <- table_theme(table8_data %>% `row.names<-`(c("1", "3", "5", "7")), colnames = table8_names,
+                      caption = "Experiment 2: Std. Dev. for given radis and number of draws", escape = TRUE) %>% 
+  kable_styling(latex_options = "scale_down")
+
+
+### 7. Application: Empirical Asset Pricing ------------------------------------
+
+
+
+
+
+
+
+### 2. Run Diagnostics ---------------------------------------------------------
+
+# Script does not take an input (data) which is why I only run diagnostics throughout as I generate the data myself 
+
+#if(length(unique(table(dat$date))) != 1){
+#  log <- c(log, "-- Not all dates have equal number of observations --")
+#}
+
+
+
+
+
+
+# Timer finished
+end_time <- Sys.time()
+
+print(paste("Total time:", end_time - start_time))
+
+bind_rows(data, test)
+
+
+
+
+
+
+
+### 8. OLD CODE  ----------------------
+
+# Ridge & Lasso
+ridgeeq <- glmnet::glmnet(y = as.matrix(train_data$DGP), x = as.matrix(train_data[, 3:42]), alpha = 0, lambda = 1)
+ridge_hat <- predict(ridgeeq, as.matrix(test_data[, 3:42]))
+ridge_mse <- apply((test_data$DGP - ridge_hat) ** 2, MARGIN = 2, FUN = mean)
+
+
+# Test for at vise matrix regning er korrekt - det var den! 
+data_test <- matrix(1:9, nrow  = 3)
+covariates_test <- matrix(3:5, nrow = 3)
+
+y <- data_test %*% covariates_test + 1 # +1 er error term holder
+
+# Density Plots - not used 
 
 ggplot(ridge1_mses, aes(x = s0)) +
   geom_histogram(aes(y = ..density..), colour = "black", fill = "white",  bins = 40) +
@@ -867,7 +947,7 @@ ggplot(data_test, aes(x = values, fill = ind, color = ind)) +
   scale_color_manual(values = c("#00BFC4", "#FF6666")) + 
   scale_fill_manual(values = c("white", "white")) + 
   theme_article() #+ 
-  #theme(legend.position = "none") # removes ledger altogether has to come after theme_article()
+#theme(legend.position = "none") # removes ledger altogether has to come after theme_article()
 
 # Farvekomvinaiton 2 
 ggplot(data_test, aes(x = values, fill = ind)) +
@@ -875,72 +955,3 @@ ggplot(data_test, aes(x = values, fill = ind)) +
   scale_fill_manual(values = c("#FF6666", "#00BFC4")) + 
   theme_article() #+ 
 #theme(legend.position = "none") # removes ledger altogether has to come after theme_article()
-
-
-
-
-
-# Fra hvad jeg har set så giver det kun mening at plotte density funktionerne for ridge og lasso i samme plot for cluster radius 4 og op. PDF for lasso er simpelthen så lille at det nærmest
-# ikke giver mening at plotte den... - de skal hvertfald plottes i to separate plots hvis jeg vælger at gøre det 
-
-# Jeg kan lave et tabel med std. dev eller udvide det table der er med means. På den måde kan jeg også tale til volatiliteten. 
-
-
-
-
-### 7. Application: Empirical Asset Pricing ------------------------------------
-
-
-# Jeg skal bruge det jeg har fra MA2 i AEF 
-
-
-# Timer finished
-end_time <- Sys.time()
-print(paste("Total time:", end_time - start_time))
-
-# Vi ser i det første eksperiment på hvordan ridge og lasso predicter igennem cluster radius. Men vi har ret få observationer; kun lidt flere end
-# covariates - typisk vil vi have bare lidt flere og det kunne derfor være interessant at se hvor mange observationer vi egentlig skal bruge før
-# vi får en form for konvergens; hvornår bliver ridge og lasso gode; hvor mange observationer før de bliver gode? og hvordan ser konvergensen
-# ud? e.g. er de MEGET ringe i starten (som det viste ridge var med 40 obs) og så bliver de hurtigere bedre, eller er konvergensen mere lineær?
-# Det kan som sagt tale til hvor mange obserevationer der skal til før vi kan bruge ridge og lasso til noget, i.e. i hvilke casees kan vi 
-# bruge den metode til noget? Det kan i en situation sættes i perspektiv til andre ML metoder? f.eks. deep learning, som vist skal brugee
-# mere data. 
-
-
-# Det eksperiment bliver så for en given cluster størrelse - men jeg kan vælge flere, måske 1, 3 og 5 og så se hvordan konvergens er der. Jeg 
-# computer så MSE gennem antal observationer
-
-
-
-# Ridge & Lasso
-ridgeeq <- glmnet::glmnet(y = as.matrix(train_data$DGP), x = as.matrix(train_data[, 3:42]), alpha = 0, lambda = 1)
-ridge_hat <- predict(ridgeeq, as.matrix(test_data[, 3:42]))
-ridge_mse <- apply((test_data$DGP - ridge_hat) ** 2, MARGIN = 2, FUN = mean)
-
-
-# Test for at vise matrix regning er korrekt - det var den! 
-data_test <- matrix(1:9, nrow  = 3)
-covariates_test <- matrix(3:5, nrow = 3)
-
-y <- data_test %*% covariates_test + 1 # +1 er error term holder
-
-
-
-
-### 2. Run Diagnostics -----------------------------------------------------
-
-
-# Tilføj noget med at diagnostics er blevet carried out i de forskellige dele af scripted da programmet her ikke taget noget input 
-# Check dataset balanced (all dates have equal number of observations)
-if(length(unique(table(dat$date))) != 1){
-  log <- c(log, "-- Not all dates have equal number of observations --")
-}
-
-
-
-# Timer finished
-end_time <- Sys.time()
-
-print(paste("Total time:", end_time - start_time))
-
-bind_rows(data, test)
