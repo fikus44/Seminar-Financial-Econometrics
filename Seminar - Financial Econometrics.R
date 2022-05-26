@@ -817,16 +817,20 @@ for (t in 1:length(figure9_data)){
 }
 
 layout_figure9 <- rbind(c(1,2,3), c(4,5,6))
-figure9A_stacked <- gridExtra::grid.arrange(figure9[[1]], figure9[[2]], figure9[[3]], figure9[[4]], figure9[[5]], figure9[[6]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+figure9A_stacked <- gridExtra::grid.arrange(figure9[[1]], figure9[[2]], figure9[[3]], figure9[[4]], figure9[[5]], figure9[[6]], 
+                                            ncol = 3, nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure9A.pdf", plot=figure9A_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
-figure9B_stacked <- gridExtra::grid.arrange(figure9[[7]], figure9[[8]], figure9[[9]], figure9[[10]], figure9[[11]], figure9[[12]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+figure9B_stacked <- gridExtra::grid.arrange(figure9[[7]], figure9[[8]], figure9[[9]], figure9[[10]], figure9[[11]], figure9[[12]], ncol = 3, 
+                                            nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure9B.pdf", plot=figure9B_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
-figure9C_stacked <- gridExtra::grid.arrange(figure9[[13]], figure9[[14]], figure9[[15]], figure9[[16]], figure9[[17]], figure9[[18]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+figure9C_stacked <- gridExtra::grid.arrange(figure9[[13]], figure9[[14]], figure9[[15]], figure9[[16]], figure9[[17]], figure9[[18]], ncol = 3, 
+                                            nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure9C.pdf", plot=figure9C_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
-figure9D_stacked <- gridExtra::grid.arrange(figure9[[19]], figure9[[20]], figure9[[21]], figure9[[22]], figure9[[23]], figure9[[24]], ncol = 3, nrow = 2, layout_matrix = layout_figure8)
+figure9D_stacked <- gridExtra::grid.arrange(figure9[[19]], figure9[[20]], figure9[[21]], figure9[[22]], figure9[[23]], figure9[[24]], ncol = 3, 
+                                            nrow = 2, layout_matrix = layout_figure8)
 ggsave("figure9D.pdf", plot=figure9D_stacked, width = 35, height = 21, units= "cm", dpi = 300)
 
 # RIDGE: Tables of Standard deviation of ridge and lasso regression in experiment 2 
@@ -880,7 +884,7 @@ table8 <- table_theme(table8_data %>% `row.names<-`(c("1", "3", "5", "7")), coln
 
 
 
-### 2. Run Diagnostics ---------------------------------------------------------
+### 8. Run Diagnostics ---------------------------------------------------------
 
 # Script does not take an input (data) which is why I only run diagnostics throughout as I generate the data myself 
 
@@ -906,7 +910,7 @@ bind_rows(data, test)
 
 
 
-### 8. OLD CODE  ----------------------
+### 9. OLD CODE  ----------------------
 
 # Ridge & Lasso
 ridgeeq <- glmnet::glmnet(y = as.matrix(train_data$DGP), x = as.matrix(train_data[, 3:42]), alpha = 0, lambda = 1)
